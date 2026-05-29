@@ -1,0 +1,11 @@
+{
+  "name": "ai-prior-authorization-operations-hub-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "cd ../frontend && npm run typecheck",
+    "smoke": "cd ../frontend && npm run smoke",
+    "dev": "cd ../frontend && npm run dev"
+  },
+  "notes": "Backend API routes are exposed here and executed by the Next.js full-stack runtime."
+}

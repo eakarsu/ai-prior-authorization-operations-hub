@@ -1,0 +1,26 @@
+
+# --- build/bloat ---
+node_modules/
+**/node_modules/
+node_modules
+**/node_modules
+*.tsbuildinfo
+dist/
+build/
+.next/
+.DS_Store
+*.log
+
+# --- secrets: never commit ---
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+token.txt
+*.token
+.npmrc
+id_rsa*
+**/credentials*.json
+**/serviceAccount*.json

@@ -1,0 +1,26 @@
+{
+  "name": "ai-prior-authorization-operations-hub-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "lucide-react": "^0.468.0",
+    "next": "14.0.4",
+    "pg": "^8.16.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "typescript": "5.3.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.5"
+  }
+}
