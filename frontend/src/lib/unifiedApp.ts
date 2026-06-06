@@ -272,7 +272,183 @@ const aiFeatures = [
   },
 ] as const;
 
-const allFeatures = [...features, ...aiFeatures];
+const supplementalFeatures = [
+  {
+    slug: 'benefit-verification',
+    title: 'Benefit Verification',
+    href: '/benefit-verification',
+    category: 'Verification',
+    icon: ShieldCheck,
+    summary: 'Eligibility, deductible, out-of-pocket, plan limits, referral requirements, and payer benefit snapshots before authorization work starts.',
+    bullets: ['Eligibility check', 'Benefit snapshot', 'Referral requirements'],
+    metrics: [{ label: 'Verified', value: '218', note: 'This week' }, { label: 'Needs Follow-up', value: '31', note: 'Coverage gaps' }, { label: 'Clean', value: '86%', note: 'Ready for PA' }],
+  },
+  {
+    slug: 'medical-necessity-review',
+    title: 'Medical Necessity Review',
+    href: '/medical-necessity-review',
+    category: 'Clinical Review',
+    icon: ClipboardList,
+    summary: 'Medical necessity criteria, guideline fit, diagnosis support, conservative therapy, and clinician attestation readiness.',
+    bullets: ['Guideline fit', 'Diagnosis support', 'Clinician attestation'],
+    metrics: [{ label: 'Reviews', value: '174', note: 'Open' }, { label: 'Weak Support', value: '22', note: 'Need evidence' }, { label: 'Ready', value: '81%', note: 'Criteria met' }],
+  },
+  {
+    slug: 'peer-to-peer-scheduling',
+    title: 'Peer-to-Peer Scheduling',
+    href: '/peer-to-peer-scheduling',
+    category: 'Clinical Review',
+    icon: CalendarCheck,
+    summary: 'Payer peer-review windows, clinician availability, talking points, contact attempts, and outcome capture.',
+    bullets: ['Review windows', 'Clinician availability', 'Outcome capture'],
+    metrics: [{ label: 'Calls', value: '42', note: 'Scheduled' }, { label: 'At Risk', value: '9', note: 'Window closing' }, { label: 'Overturned', value: '64%', note: 'After call' }],
+  },
+  {
+    slug: 'status-polling',
+    title: 'Status Polling',
+    href: '/status-polling',
+    category: 'Integrations',
+    icon: Plug,
+    summary: 'Payer portal, clearinghouse, fax, email, and manual follow-up polling with stale-status escalation.',
+    bullets: ['Portal polling', 'Stale statuses', 'Manual fallback'],
+    metrics: [{ label: 'Polls', value: '612', note: 'Today' }, { label: 'Stale', value: '27', note: 'Escalate' }, { label: 'Updated', value: '148', note: 'Since morning' }],
+  },
+  {
+    slug: 'payer-portal-workbench',
+    title: 'Payer Portal Workbench',
+    href: '/payer-portal-workbench',
+    category: 'Integrations',
+    icon: Workflow,
+    summary: 'Portal-specific submission checklists, credential ownership, document upload tracking, screenshots, and manual fallback queues.',
+    bullets: ['Portal checklist', 'Credential owner', 'Upload tracking'],
+    metrics: [{ label: 'Portals', value: '18', note: 'Tracked' }, { label: 'Credential Gaps', value: '5', note: 'Blocked' }, { label: 'Manual Tasks', value: '39', note: 'Queued' }],
+  },
+  {
+    slug: 'specialty-drug-pa',
+    title: 'Specialty Drug PA',
+    href: '/specialty-drug-pa',
+    category: 'Service Lines',
+    icon: BriefcaseBusiness,
+    summary: 'Medication-specific prior authorization, formulary rules, step therapy, quantity limits, labs, and pharmacy benefit routing.',
+    bullets: ['Formulary rules', 'Step therapy', 'Pharmacy routing'],
+    metrics: [{ label: 'Drug PAs', value: '96', note: 'Active' }, { label: 'Step Therapy', value: '28', note: 'Required' }, { label: 'Approved', value: '73%', note: '30 days' }],
+  },
+  {
+    slug: 'imaging-pa',
+    title: 'Imaging PA',
+    href: '/imaging-pa',
+    category: 'Service Lines',
+    icon: FileText,
+    summary: 'Imaging authorization support for modality, body part, contrast, diagnosis, conservative therapy, and site-of-care rules.',
+    bullets: ['Modality rules', 'Conservative therapy', 'Site of care'],
+    metrics: [{ label: 'Imaging', value: '122', note: 'Open' }, { label: 'Missing Notes', value: '18', note: 'Need proof' }, { label: 'Turnaround', value: '1.8d', note: 'Median' }],
+  },
+  {
+    slug: 'dme-home-health-pa',
+    title: 'DME / Home Health PA',
+    href: '/dme-home-health-pa',
+    category: 'Service Lines',
+    icon: Users,
+    summary: 'Durable medical equipment and home-health authorization with supplier, order, documentation, and renewal tracking.',
+    bullets: ['Supplier routing', 'Order support', 'Renewal tracking'],
+    metrics: [{ label: 'Cases', value: '74', note: 'Active' }, { label: 'Supplier Holds', value: '11', note: 'Need action' }, { label: 'Renewals', value: '23', note: 'Next 30 days' }],
+  },
+  {
+    slug: 'retro-authorization',
+    title: 'Retro Authorization',
+    href: '/retro-authorization',
+    category: 'Risk',
+    icon: Activity,
+    summary: 'Retroactive authorization requests, timely filing windows, medical record proof, denial exposure, and escalation routing.',
+    bullets: ['Timely filing', 'Record proof', 'Denial exposure'],
+    metrics: [{ label: 'Retro Cases', value: '38', note: 'Open' }, { label: 'Deadline Risk', value: '12', note: 'Urgent' }, { label: 'Recovered', value: '$184K', note: 'Quarter' }],
+  },
+  {
+    slug: 'financial-clearance',
+    title: 'Financial Clearance',
+    href: '/financial-clearance',
+    category: 'Revenue Cycle',
+    icon: BarChart3,
+    summary: 'Authorization clearance before service, estimate readiness, approval dependency, cancellation risk, and revenue leakage prevention.',
+    bullets: ['Service clearance', 'Cancellation risk', 'Revenue leakage'],
+    metrics: [{ label: 'Clearance', value: '89%', note: 'Before service' }, { label: 'At Risk', value: '34', note: 'Scheduled soon' }, { label: 'Leakage', value: '$312K', note: 'Prevented' }],
+  },
+  {
+    slug: 'production-gap-workspace',
+    title: 'Production Gap Workspace',
+    href: '/production-gap-workspace',
+    category: 'Operations',
+    icon: PackageCheck,
+    summary: 'Implementation-ready backlog for live payer/EHR connectors, SSO/MFA, PHI-safe exports, monitoring, regression tests, and launch controls.',
+    bullets: ['Connector backlog', 'Security readiness', 'Launch controls'],
+    metrics: [{ label: 'Gaps', value: '18', note: 'Tracked' }, { label: 'Blocked', value: '6', note: 'Need credentials' }, { label: 'Ready', value: '82%', note: 'Pilot launch' }],
+  },
+] as const;
+
+const productionPlatformFeatures = [
+  {
+    slug: 'enterprise-identity-access',
+    title: 'Enterprise Identity & Access',
+    href: '/enterprise-identity-access',
+    category: 'Production Platform',
+    icon: UserRound,
+    summary: 'SSO, MFA, role mapping, break-glass access, access certification, and PHI-safe user provisioning for prior authorization operations.',
+    bullets: ['SSO/MFA readiness', 'Role mapping', 'Access certification'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+  {
+    slug: 'connector-operations-center',
+    title: 'Connector Operations Center',
+    href: '/connector-operations-center',
+    category: 'Production Platform',
+    icon: Plug,
+    summary: 'Live EHR, payer portal, clearinghouse, fax, and document connector ownership with credential status and retry queues.',
+    bullets: ['EHR connectors', 'Payer credentials', 'Retry queues'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+  {
+    slug: 'audit-export-center',
+    title: 'Audit Export Center',
+    href: '/audit-export-center',
+    category: 'Production Platform',
+    icon: ShieldCheck,
+    summary: 'HIPAA-ready audit export workspace for PHI access, packet decisions, payer submissions, approvals, and evidence bundles.',
+    bullets: ['PHI access export', 'Evidence bundles', 'Decision history'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+  {
+    slug: 'notification-delivery-ledger',
+    title: 'Notification Delivery Ledger',
+    href: '/notification-delivery-ledger',
+    category: 'Production Platform',
+    icon: Bell,
+    summary: 'Delivery ledger for patient, provider, payer, SMS, email, fax, webhook, retry, and escalation notifications.',
+    bullets: ['Delivery ledger', 'Failed retries', 'Escalation rules'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+  {
+    slug: 'observability-runbooks',
+    title: 'Observability & Runbooks',
+    href: '/observability-runbooks',
+    category: 'Production Platform',
+    icon: Activity,
+    summary: 'Operational health, job latency, integration failures, incident runbooks, support ownership, and on-call handoff.',
+    bullets: ['Health checks', 'Incident runbooks', 'On-call ownership'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+  {
+    slug: 'release-test-harness',
+    title: 'Release Test Harness',
+    href: '/release-test-harness',
+    category: 'Production Platform',
+    icon: PackageCheck,
+    summary: 'Browser regression, API smoke tests, seeded data checks, accessibility checks, and go-live release gates.',
+    bullets: ['Regression tests', 'Smoke checks', 'Release gates'],
+    metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
+  },
+] as const;
+
+const allFeatures = [...features, ...supplementalFeatures, ...productionPlatformFeatures, ...aiFeatures];
 const legacyPriorAuthFeatureSlugs = new Set([
   'auth-intake',
   'payer-rule-matching',
@@ -332,9 +508,18 @@ export const featureCatalog: FeatureDefinition[] = [
 ];
 
 export const featureFamilies = [
+  { name: 'Production Platform Controls', features: ['Enterprise Identity & Access', 'Connector Operations Center', 'Audit Export Center', 'Notification Delivery Ledger', 'Observability & Runbooks', 'Release Test Harness'] },
   {
     "name": "Prior Authorization",
     "features": priorAuthFeatures.map((feature) => feature.title)
+  },
+  {
+    name: 'Production PA Operations',
+    features: ['Benefit Verification', 'Medical Necessity Review', 'Peer-to-Peer Scheduling', 'Status Polling', 'Payer Portal Workbench', 'Production Gap Workspace'],
+  },
+  {
+    name: 'Service Line Authorization',
+    features: ['Specialty Drug PA', 'Imaging PA', 'DME / Home Health PA', 'Retro Authorization', 'Financial Clearance'],
   },
   {
     "name": "Core Platform",
@@ -366,7 +551,7 @@ function toPage(feature: (typeof allFeatures)[number]): PageDefinition {
   };
 }
 
-export const pageRegistry: Record<string, PageDefinition> = Object.fromEntries(features.map((feature) => [feature.slug, toPage(feature)]));
+export const pageRegistry: Record<string, PageDefinition> = Object.fromEntries([...features, ...supplementalFeatures, ...productionPlatformFeatures].map((feature) => [feature.slug, toPage(feature)]));
 export const aiFeatureRegistry: Record<string, PageDefinition> = Object.fromEntries(aiFeatures.map((feature) => [feature.slug, toPage(feature)]));
 export const featureContexts: Record<string, FeatureContext> = Object.fromEntries(
   allFeatures.map((feature) => [
