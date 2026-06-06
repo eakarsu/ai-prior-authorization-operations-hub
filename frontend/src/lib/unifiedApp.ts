@@ -11,6 +11,7 @@ import {
   FileText,
   Files,
   LayoutDashboard,
+  ListChecks,
   PackageCheck,
   Plug,
   ShieldCheck,
@@ -19,6 +20,7 @@ import {
   Workflow,
   type LucideIcon,
 } from 'lucide-react';
+import { priorAuthFeatureMap, priorAuthFeatures } from '@/lib/priorAuthNavigation';
 
 export type NavItem = { label: string; href: string; icon: LucideIcon };
 export type FeatureDefinition = { title: string; href: string; category: string; summary: string; bullets: string[] };
@@ -271,78 +273,68 @@ const aiFeatures = [
 ] as const;
 
 const allFeatures = [...features, ...aiFeatures];
+const legacyPriorAuthFeatureSlugs = new Set([
+  'auth-intake',
+  'payer-rule-matching',
+  'evidence-checklist',
+  'packet-generation',
+  'denial-prevention',
+  'appeal-routing',
+  'peer-review-prep',
+  'sla-tracking',
+  'authorization-analytics',
+  'patient-updates',
+]);
+const visibleLegacyFeatures = allFeatures.filter((feature) => !legacyPriorAuthFeatureSlugs.has(feature.slug));
+const priorAuthIconBySlug: Record<string, LucideIcon> = {
+  'case-model': ListChecks,
+  'case-timeline': Workflow,
+  'payer-rule-engine': ShieldCheck,
+  'evidence-gap-detection': ClipboardList,
+  'packet-builder': Files,
+  'submissions-integrations': Plug,
+  'appeals-workspace': FileText,
+  'sla-automation': CalendarCheck,
+  analytics: BarChart3,
+  'compliance-security': ShieldCheck,
+};
 
 export const primaryNav: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'All Features', href: '/features', icon: Blocks },
+  { label: 'Production Readiness', href: '/production-readiness', icon: ShieldCheck },
   { label: 'Documents', href: '/documents', icon: Files },
   { label: 'Source Tables', href: '/source-tables', icon: Database },
   { label: 'Profiles', href: '/profiles', icon: UserRound },
 ];
 
-export const featureNav: NavItem[] = allFeatures.map((feature) => ({ label: feature.title, href: feature.href, icon: feature.icon }));
-export const featureCatalog: FeatureDefinition[] = allFeatures.map((feature) => ({ title: feature.title, href: feature.href, category: feature.category, summary: feature.summary, bullets: [...feature.bullets] }));
+export const priorAuthCapabilityNav: NavItem[] = [
+  ...priorAuthFeatures.map((feature) => ({
+    label: feature.shortTitle,
+    href: priorAuthFeatureMap[feature.slug].href,
+    icon: priorAuthIconBySlug[feature.slug] || ListChecks,
+  })),
+];
+
+export const featureNav: NavItem[] = [
+  ...priorAuthCapabilityNav,
+  ...visibleLegacyFeatures.map((feature) => ({ label: feature.title, href: feature.href, icon: feature.icon })),
+];
+export const featureCatalog: FeatureDefinition[] = [
+  ...priorAuthFeatures.map((feature) => ({
+    title: feature.title,
+    href: feature.href,
+    category: 'Prior Authorization',
+    summary: feature.summary,
+    bullets: feature.subfeatures.slice(0, 3).map((item) => item.title),
+  })),
+  ...visibleLegacyFeatures.map((feature) => ({ title: feature.title, href: feature.href, category: feature.category, summary: feature.summary, bullets: [...feature.bullets] })),
+];
 
 export const featureFamilies = [
   {
-    "name": "Intake",
-    "features": [
-      "Authorization Intake"
-    ]
-  },
-  {
-    "name": "Rules",
-    "features": [
-      "Payer Rule Matching"
-    ]
-  },
-  {
-    "name": "Evidence",
-    "features": [
-      "Evidence Checklist"
-    ]
-  },
-  {
-    "name": "Submission",
-    "features": [
-      "Packet Generation"
-    ]
-  },
-  {
-    "name": "Risk",
-    "features": [
-      "Denial Prevention"
-    ]
-  },
-  {
-    "name": "Appeals",
-    "features": [
-      "Appeal Routing"
-    ]
-  },
-  {
-    "name": "Clinical Review",
-    "features": [
-      "Peer Review Prep"
-    ]
-  },
-  {
-    "name": "Operations",
-    "features": [
-      "SLA Tracking"
-    ]
-  },
-  {
-    "name": "Reporting",
-    "features": [
-      "Authorization Analytics"
-    ]
-  },
-  {
-    "name": "Communications",
-    "features": [
-      "Patient Updates"
-    ]
+    "name": "Prior Authorization",
+    "features": priorAuthFeatures.map((feature) => feature.title)
   },
   {
     "name": "Core Platform",

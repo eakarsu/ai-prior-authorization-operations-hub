@@ -44,7 +44,7 @@ export const rolePermissions: Record<SessionUser['role'], { canApprove: boolean;
 };
 
 export function validateDemoCredentials(email: string, password: string): SessionUser | null {
-  const user = demoUsers.find((candidate) => candidate.email === email && candidate.password === password);
+  const user = getConfiguredUsers().find((candidate) => candidate.email === email && candidate.password === password);
   if (!user) return null;
   return {
     email: user.email,
@@ -52,6 +52,24 @@ export function validateDemoCredentials(email: string, password: string): Sessio
     lastName: user.lastName,
     role: user.role,
   };
+}
+
+function getConfiguredUsers(): DemoUser[] {
+  const raw = process.env.PRIOR_AUTH_USERS_JSON;
+  if (!raw) return demoUsers;
+  try {
+    const parsed = JSON.parse(raw) as DemoUser[];
+    const valid = parsed.filter((user) =>
+      user.email &&
+      user.password &&
+      user.firstName &&
+      user.lastName &&
+      ['admin', 'manager', 'analyst'].includes(user.role),
+    );
+    return valid.length ? valid : demoUsers;
+  } catch {
+    return demoUsers;
+  }
 }
 
 export function getDemoSessionUser(role: SessionUser['role'] = demoUser.role): SessionUser {
@@ -62,21 +80,6 @@ export function getDemoSessionUser(role: SessionUser['role'] = demoUser.role): S
     lastName: user.lastName,
     role: user.role,
   };
-}
-
-export function encodeSession(user: SessionUser) {
-  return Buffer.from(JSON.stringify(user), 'utf8').toString('base64url');
-}
-
-export function decodeSession(value?: string | null): SessionUser | null {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as SessionUser;
-    if (!parsed?.email || !parsed?.role) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
 }
 
 export function canManageDocuments(user: SessionUser | null) {

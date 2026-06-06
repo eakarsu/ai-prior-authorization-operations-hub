@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE, canApprove, canManageDocuments, decodeSession, type SessionUser } from '@/lib/auth';
+import { AUTH_COOKIE, canApprove, canManageDocuments, type SessionUser } from '@/lib/auth';
+import { decodeSession } from '@/lib/authSession';
 
 export function getRequestUser(request: NextRequest): SessionUser | null {
   return decodeSession(request.cookies.get(AUTH_COOKIE)?.value);

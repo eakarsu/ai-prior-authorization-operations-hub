@@ -7,6 +7,7 @@ import AIWorkbench from '@/components/unified/AIWorkbench';
 import DocumentsWorkspace from '@/components/unified/DocumentsWorkspace';
 import EntityWorkspace from '@/components/unified/EntityWorkspace';
 import MetricCard from '@/components/unified/MetricCard';
+import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
 import UnifiedShell from '@/components/unified/UnifiedShell';
 import { featureContexts, type PageDefinition } from '@/lib/unifiedApp';
 import { sourceCustomFeatureContexts, sourceCustomFeatureEntitiesBySlug, sourceCustomFeatureSurfaceBySlug } from '@/lib/sourceCustomFeatures';
@@ -23,6 +24,18 @@ const emptyFeatureSurface: FeatureSurface = {
 };
 
 const emptyWorkItem = { item: '', status: 'Open', owner: '', nextStep: '' };
+const priorAuthWorkflowSlugs = new Set([
+  'auth-intake',
+  'payer-rule-matching',
+  'evidence-checklist',
+  'packet-generation',
+  'denial-prevention',
+  'appeal-routing',
+  'peer-review-prep',
+  'sla-tracking',
+  'authorization-analytics',
+  'patient-updates',
+]);
 
 type FeaturePageProps = {
   slug: string;
@@ -283,6 +296,13 @@ export default function FeaturePage({ slug, page }: FeaturePageProps) {
         <>
           <div style={{ height: 16 }} />
           <AIWorkbench mode={slug === 'ai-assistant' ? 'assistant' : 'tools'} />
+        </>
+      ) : null}
+
+      {priorAuthWorkflowSlugs.has(slug) ? (
+        <>
+          <div style={{ height: 16 }} />
+          <PriorAuthWorkspace focus={slug} />
         </>
       ) : null}
 

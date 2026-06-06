@@ -1,0 +1,27 @@
+%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj
+4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
+5 0 obj << /Length 523 >> stream
+BT /F1 11 Tf 0 0 Td 72 740 Td (Prior Authorization Packet) Tj
+72 718 Td (Case: PA-2026-1012) Tj
+72 696 Td (Patient: Lucas Brown) Tj
+72 674 Td (Payer: BlueCross BlueShield / Blue Select) Tj
+72 652 Td (Service: CPAP replacement request) Tj
+72 630 Td (Codes: E0601, G47.33) Tj
+72 608 Td (Documents: CPAP replacement request clinical packet, CPAP replacement request order form) Tj
+72 586 Td (Evidence: Sleep study \(Needs review\), Prescription \(Satisfied\), Device settings \(Satisfied\), Clinical notes \(Satisfied\)) Tj ET
+endstream endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+885
+%%EOF

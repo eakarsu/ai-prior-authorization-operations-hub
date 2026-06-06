@@ -2,17 +2,20 @@ import AuditPanel from '@/components/unified/AuditPanel';
 import Link from 'next/link';
 import SourceDashboardActions from '@/components/unified/SourceDashboardActions';
 import NotificationsPanel from '@/components/unified/NotificationsPanel';
+import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
 import UnifiedShell from '@/components/unified/UnifiedShell';
 import MetricCard from '@/components/unified/MetricCard';
 import { featureCatalog, featureFamilies } from '@/lib/unifiedApp';
 import { dashboardMetrics, dashboardModules, healthMetrics, sourceSystems, workflowHighlights } from '@/lib/suiteData';
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   return (
     <UnifiedShell
       eyebrow="Control Plane"
-      title="AI Agent Ops Suite Dashboard"
-      subtitle="One merged ai agent ops view for Agents, Prompts, Evals, Traces, Cost Tracking, Latency Monitoring, Failure Analysis, documents, audit, and AI."
+      title="Prior Authorization Operations Dashboard"
+      subtitle="One operating view for authorization cases, payer rules, evidence gaps, packet readiness, submissions, appeals, SLA risk, analytics, documents, audit, and AI."
     >
       <div className="grid columns-4">
         {dashboardMetrics.map((metric) => (
@@ -32,9 +35,9 @@ export default function DashboardPage() {
 
       <div className="grid columns-2">
         <div className="card stack">
-          <h3>Combined Operating View</h3>
+          <h3>Prior Authorization Operating View</h3>
           <div className="muted">
-            This suite removes project-based navigation and groups shared ai agent ops jobs into one surface. Agents, Prompts, Evals, Traces, Cost Tracking, Latency Monitoring, Failure Analysis, source tables, documents, audit, and AI are presented as platform features.
+            This hub organizes authorization work around cases moving from intake through payer rules, evidence, packet generation, submission, payer response, denial prevention, appeal, patient updates, and reporting.
           </div>
           <div className="button-row">
             <Link className="button primary" href="/features">View All Features</Link>
@@ -99,6 +102,10 @@ export default function DashboardPage() {
 
       <div style={{ height: 16 }} />
 
+      <PriorAuthWorkspace focus="dashboard" />
+
+      <div style={{ height: 16 }} />
+
       <SourceDashboardActions />
 
       <div style={{ height: 16 }} />
@@ -112,16 +119,27 @@ export default function DashboardPage() {
 
       <div className="card">
         <h3>Feature Access Map</h3>
-        <div className="grid columns-3">
-          {featureCatalog.map((feature) => (
-            <div key={feature.title} className="card">
-              <div className="pill">{feature.category}</div>
-              <h4 style={{ marginTop: 12 }}>{feature.title}</h4>
-              <div className="muted">{feature.summary}</div>
-              <div style={{ height: 12 }} />
-              <Link className="button" href={feature.href}>Open Feature</Link>
-            </div>
-          ))}
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Category</th>
+                <th>Summary</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {featureCatalog.map((feature) => (
+                <tr key={feature.title}>
+                  <td><strong>{feature.title}</strong></td>
+                  <td><span className="status-chip">{feature.category}</span></td>
+                  <td>{feature.summary}</td>
+                  <td><Link className="button" href={feature.href}>Open</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </UnifiedShell>

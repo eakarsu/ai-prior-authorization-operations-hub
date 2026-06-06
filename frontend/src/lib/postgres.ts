@@ -3,13 +3,26 @@ import path from 'path';
 import { Pool } from 'pg';
 import { DATA_DIR } from '@/lib/storePaths';
 
-const DEFAULT_DB = 'marketing_growth_automation_suite';
+const DEFAULT_DB = 'ai_prior_authorization_operations_hub';
 
 let pool: Pool | null = null;
 let initialized = false;
 let initPromise: Promise<Pool> | null = null;
 
 type JsonMap<T> = Record<string, T>;
+type ListTable =
+  | 'documents'
+  | 'notifications'
+  | 'audit_log'
+  | 'source_data_tables'
+  | 'prior_auth_cases'
+  | 'prior_auth_subfeature_rows'
+  | 'prior_auth_integrations'
+  | 'prior_auth_notification_outbox'
+  | 'prior_auth_packet_artifacts'
+  | 'prior_auth_access_logs'
+  | 'prior_auth_auth_controls'
+  | 'prior_auth_deployment_checklist';
 
 function getPool() {
   if (pool) return pool;
@@ -78,6 +91,46 @@ export async function ensurePostgres() {
           payload JSONB NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
+        CREATE TABLE IF NOT EXISTS prior_auth_cases (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_subfeature_rows (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_integrations (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_notification_outbox (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_packet_artifacts (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_access_logs (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_auth_controls (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS prior_auth_deployment_checklist (
+          id TEXT PRIMARY KEY,
+          payload JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
       `);
       initialized = true;
       return current;
@@ -104,7 +157,7 @@ export async function ensureKeyValueSeed<T>(
 }
 
 export async function ensureListSeed<T extends { id: string }>(
-  table: 'documents' | 'notifications' | 'audit_log' | 'source_data_tables',
+  table: ListTable,
   seed: T[],
   jsonFile: string,
 ) {
@@ -135,13 +188,13 @@ export async function setPgKeyValue<T>(table: 'feature_states' | 'entities', slu
   );
 }
 
-export async function listPgPayloads<T>(table: 'documents' | 'notifications' | 'audit_log' | 'source_data_tables'): Promise<T[]> {
+export async function listPgPayloads<T>(table: ListTable): Promise<T[]> {
   const current = await ensurePostgres();
   const { rows } = await current.query<{ payload: T }>(`SELECT payload FROM ${table} ORDER BY updated_at DESC`);
   return rows.map((row: { payload: T }) => row.payload);
 }
 
-export async function replacePgPayloads<T extends { id: string }>(table: 'documents' | 'notifications' | 'audit_log' | 'source_data_tables', items: T[]) {
+export async function replacePgPayloads<T extends { id: string }>(table: ListTable, items: T[]) {
   const current = await ensurePostgres();
   await current.query('BEGIN');
   try {
@@ -159,7 +212,7 @@ export async function replacePgPayloads<T extends { id: string }>(table: 'docume
   }
 }
 
-export async function upsertPgPayload<T extends { id: string }>(table: 'documents' | 'notifications' | 'audit_log' | 'source_data_tables', item: T) {
+export async function upsertPgPayload<T extends { id: string }>(table: ListTable, item: T) {
   const current = await ensurePostgres();
   await current.query(
     `INSERT INTO ${table} (id, payload, updated_at) VALUES ($1, $2::jsonb, NOW())

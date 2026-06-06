@@ -10,32 +10,57 @@ export default function FeaturesPage() {
   return (
     <UnifiedShell
       eyebrow="Feature Map"
-      title="All AI Agent Ops Features"
-      subtitle="Feature-first navigation collected from source applications and normalized into one suite."
+      title="All Prior Authorization Features"
+      subtitle="Feature-first navigation for intake, rules, evidence, packet generation, appeals, SLA, analytics, documents, and AI."
     >
-      <div className="grid columns-3" style={{ marginBottom: 16 }}>
-        {mergedFamilies.map((family) => (
-          <div className="card stack" key={family.name}>
-            <div className="pill">{family.name}</div>
-            <div className="muted">{family.features.join(' · ')}</div>
-          </div>
-        ))}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3>Feature Families</h3>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Features</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mergedFamilies.map((family) => (
+                <tr key={family.name}>
+                  <td><span className="status-chip">{family.name}</span></td>
+                  <td>{family.features.join(' · ')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="grid columns-3">
-        {mergedCatalog.map((feature) => (
-          <div className="card stack" key={feature.title}>
-            <div className="pill">{feature.category}</div>
-            <h3>{feature.title}</h3>
-            <div className="muted">{feature.summary}</div>
-            <ul className="feature-list">
-              {feature.bullets.map((bullet) => (
-                <li key={bullet}>{bullet}</li>
+      <div className="card">
+        <h3>Feature Catalog</h3>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Category</th>
+                <th>Summary</th>
+                <th>Workloads</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mergedCatalog.map((feature) => (
+                <tr key={feature.title}>
+                  <td><strong>{feature.title}</strong></td>
+                  <td><span className="status-chip">{feature.category}</span></td>
+                  <td>{feature.summary}</td>
+                  <td>{feature.bullets.join(' · ')}</td>
+                  <td><Link className="button" href={feature.href}>Open</Link></td>
+                </tr>
               ))}
-            </ul>
-            <Link className="button" href={feature.href}>Open Feature</Link>
-          </div>
-        ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </UnifiedShell>
   );

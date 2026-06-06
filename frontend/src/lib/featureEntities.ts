@@ -149,14 +149,31 @@ const entitySeeds = [
 ] as const;
 
 function buildSet(slug: string, title: string, firstName: string, firstStatus: string, secondName: string, owner: string, amount: string): FeatureEntitySet {
+  const featureName = title.replace(' Records', '');
+  const statuses = [firstStatus, 'Review', 'Queued', 'Open', 'Ready', 'In review', 'Approval pending', 'Urgent', 'Completed', 'Exception'];
+  const owners = [owner, 'Operations', 'Team Lead', 'Clinical Reviewer', 'Submission Lead', 'Appeals Lead', 'Payer Liaison'];
+  const priorities = ['High', 'Medium', 'Low', 'Urgent'];
+  const baseRows: EntityRecord[] = [
+    { id: `${slug}-1`, name: firstName, status: firstStatus, owner, amount, dueDate: '2026-06-03', priority: 'High' },
+    { id: `${slug}-2`, name: secondName, status: 'Review', owner: 'Operations', amount, dueDate: '2026-06-06', priority: 'Medium' },
+    { id: `${slug}-3`, name: `${featureName} audit queue`, status: 'Queued', owner: 'Team Lead', amount: '$0', dueDate: '2026-06-10', priority: 'Medium' },
+  ];
+  const supplementalRows: EntityRecord[] = Array.from({ length: 12 }, (_, index) => {
+    const rowNumber = index + 4;
+    return {
+      id: `${slug}-${rowNumber}`,
+      name: `${featureName} case ${String(rowNumber).padStart(2, '0')}`,
+      status: statuses[index % statuses.length],
+      owner: owners[index % owners.length],
+      amount,
+      dueDate: `2026-06-${String(11 + index).padStart(2, '0')}`,
+      priority: priorities[index % priorities.length],
+    };
+  });
   return {
     title,
     columns: COLUMNS,
-    rows: [
-      { id: `${slug}-1`, name: firstName, status: firstStatus, owner, amount, dueDate: '2026-06-03', priority: 'High' },
-      { id: `${slug}-2`, name: secondName, status: 'Review', owner: 'Operations', amount, dueDate: '2026-06-06', priority: 'Medium' },
-      { id: `${slug}-3`, name: `${title.replace(' Records', '')} audit queue`, status: 'Queued', owner: 'Team Lead', amount: '$0', dueDate: '2026-06-10', priority: 'Medium' },
-    ],
+    rows: [...baseRows, ...supplementalRows],
   };
 }
 

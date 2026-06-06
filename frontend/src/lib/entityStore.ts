@@ -13,6 +13,19 @@ function cloneSet(set: FeatureEntitySet): FeatureEntitySet {
   };
 }
 
+function backfillSeedRows(existing: FeatureEntitySet, seed: FeatureEntitySet): FeatureEntitySet {
+  if (existing.rows.length >= seed.rows.length) return existing;
+  const existingIds = new Set(existing.rows.map((row) => row.id));
+  return {
+    title: existing.title || seed.title,
+    columns: existing.columns.length ? existing.columns : [...seed.columns],
+    rows: [
+      ...existing.rows.map((row) => ({ ...row })),
+      ...seed.rows.filter((row) => !existingIds.has(row.id)).map((row) => ({ ...row })),
+    ],
+  };
+}
+
 function getSeedEntities(): EntityStateMap {
   return Object.fromEntries(
     Object.entries({ ...featureEntitiesBySlug, ...sourceCustomFeatureEntitiesBySlug }).map(([slug, set]) => [slug, cloneSet(set)]),
@@ -26,8 +39,15 @@ async function ensureStore() {
 export async function getEntitySet(slug: string): Promise<FeatureEntitySet | null> {
   await ensureStore();
   const existing = await getPgKeyValue<FeatureEntitySet>('entities', slug);
-  if (existing) return existing;
   const seed = featureEntitiesBySlug[slug] ?? sourceCustomFeatureEntitiesBySlug[slug];
+  if (existing) {
+    if (seed && existing.rows.length < seed.rows.length) {
+      const backfilled = backfillSeedRows(existing, seed);
+      await setPgKeyValue('entities', slug, backfilled);
+      return backfilled;
+    }
+    return existing;
+  }
   if (!seed) return null;
   const seeded = cloneSet(seed);
   await setPgKeyValue('entities', slug, seeded);

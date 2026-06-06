@@ -26,7 +26,7 @@ export default function LoginPage() {
     const ok = await login(email, password);
     setSubmitting(false);
     if (!ok) {
-      setError('Use the seeded AI Agent Ops demo credentials.');
+      setError('Use configured credentials or the seeded Prior Auth demo credentials.');
       return;
     }
     router.push('/dashboard');
@@ -35,10 +35,10 @@ export default function LoginPage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="pill">Agent Ops</div>
-        <h1 style={{ marginBottom: 8 }}>AI Agent Ops login</h1>
+        <div className="pill">Prior Auth</div>
+        <h1 style={{ marginBottom: 8 }}>Prior Auth login</h1>
         <div className="muted">
-          One login for ai agent ops features, source tables, documents, notifications, audit, approvals, and AI operations.
+          One login for case lifecycle, payer rules, evidence, packets, appeals, SLA, analytics, documents, audit, approvals, and AI operations.
         </div>
 
         <form onSubmit={onSubmit}>

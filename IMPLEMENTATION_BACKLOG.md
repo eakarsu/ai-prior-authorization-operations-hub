@@ -1,4 +1,4 @@
-# AI Agent Ops Suite Implementation Backlog
+# AI Prior Authorization Operations Hub Implementation Backlog
 
 - Add live third-party credentials only through local .env files.
 - Replace seeded demo rows with production source connectors when ready.

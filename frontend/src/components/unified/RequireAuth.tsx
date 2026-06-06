@@ -15,7 +15,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
   }, [ready, router, user]);
 
   if (!ready || !user) {
-    return <div className="auth-wrap"><div className="card">Loading AI Agent Ops suite...</div></div>;
+    return <div className="auth-wrap"><div className="card">Loading Prior Authorization Operations Hub...</div></div>;
   }
 
   return <>{children}</>;

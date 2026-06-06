@@ -13,6 +13,7 @@ type UnifiedShellProps = {
 
 export default function UnifiedShell({ children, title, subtitle, eyebrow }: UnifiedShellProps) {
   const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <div className="app-shell">
@@ -20,14 +21,14 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
         <div className="brand-block">
           <div className="brand-mark">AI</div>
           <div>
-            <div className="pill">Agent Ops</div>
-            <h1>AI Agent Ops</h1>
+            <div className="pill">Prior Auth</div>
+            <h1>Prior Auth Ops</h1>
           </div>
         </div>
         <nav className="nav-section">
           {primaryNav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = isActive(item.href);
             return (
               <Link key={item.href} className={active ? 'nav-link active' : 'nav-link'} href={item.href}>
                 <Icon size={18} />
@@ -40,7 +41,7 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
         <nav className="nav-section scroll">
           {featureNav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = isActive(item.href);
             return (
               <Link key={item.href} className={active ? 'nav-link active' : 'nav-link'} href={item.href}>
                 <Icon size={17} />
@@ -57,7 +58,7 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
             <h2>{title}</h2>
             {subtitle ? <p>{subtitle}</p> : null}
           </div>
-          <div className="session-pill">admin@ai-agent-ops.local<span>Agent Ops Session Active</span></div>
+          <div className="session-pill">admin@prior-auth.local<span>Prior Auth Session Active</span></div>
         </header>
         {children}
       </main>

@@ -1,26 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE, decodeSession } from '@/lib/auth';
+import { AUTH_COOKIE } from '@/lib/auth';
 
 const protectedPaths = [
   '/dashboard',
+  '/prior-auth',
   '/features',
+  '/production-readiness',
   '/documents',
   '/profiles',
-  '/accounts',
-  '/contacts',
-  '/leads',
-  '/opportunities',
-  '/pipeline',
-  '/campaigns',
-  '/outreach-sequences',
-  '/activities',
-  '/quotes-contracts',
-  '/billing-revenue',
-  '/recruiting-staffing',
-  '/reports-forecasting',
-  '/templates',
+  '/auth-intake',
+  '/payer-rule-matching',
+  '/evidence-checklist',
+  '/packet-generation',
+  '/denial-prevention',
+  '/appeal-routing',
+  '/peer-review-prep',
+  '/sla-tracking',
+  '/authorization-analytics',
+  '/patient-updates',
+  '/source-tables',
   '/integrations',
-  '/custom-views',
+  '/notifications',
+  '/features/ai-assistant',
+  '/features/ai-tools',
 ];
 
 function isProtected(pathname: string) {
@@ -29,8 +31,7 @@ function isProtected(pathname: string) {
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const user = decodeSession(request.cookies.get(AUTH_COOKIE)?.value);
-  const hasSession = Boolean(user);
+  const hasSession = Boolean(request.cookies.get(AUTH_COOKIE)?.value);
 
   if ((pathname === '/login' || pathname === '/') && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -44,5 +45,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/login', '/dashboard/:path*', '/features/:path*', '/documents/:path*', '/profiles/:path*', '/accounts/:path*', '/contacts/:path*', '/leads/:path*', '/opportunities/:path*', '/pipeline/:path*', '/campaigns/:path*', '/outreach-sequences/:path*', '/activities/:path*', '/quotes-contracts/:path*', '/billing-revenue/:path*', '/recruiting-staffing/:path*', '/reports-forecasting/:path*', '/templates/:path*', '/integrations/:path*', '/custom-views/:path*'],
+  matcher: ['/', '/login', '/dashboard/:path*', '/prior-auth/:path*', '/features/:path*', '/production-readiness/:path*', '/documents/:path*', '/profiles/:path*', '/auth-intake/:path*', '/payer-rule-matching/:path*', '/evidence-checklist/:path*', '/packet-generation/:path*', '/denial-prevention/:path*', '/appeal-routing/:path*', '/peer-review-prep/:path*', '/sla-tracking/:path*', '/authorization-analytics/:path*', '/patient-updates/:path*', '/source-tables/:path*', '/integrations/:path*', '/notifications/:path*'],
 };

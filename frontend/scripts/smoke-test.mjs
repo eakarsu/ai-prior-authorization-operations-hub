@@ -27,20 +27,34 @@ async function expectJson(path, cookie, status = 200) {
   return response.json();
 }
 
-const adminCookie = await login('admin@ai-agent-ops.local', 'admin123');
-const managerCookie = await login('manager@ai-agent-ops.local', 'manager123');
-const analystCookie = await login('analyst@ai-agent-ops.local', 'analyst123');
+const adminCookie = await login('admin@prior-auth.local', 'admin123');
+const managerCookie = await login('manager@prior-auth.local', 'manager123');
+const analystCookie = await login('analyst@prior-auth.local', 'analyst123');
 
 await expectJson('/api/dashboard', adminCookie);
-await expectJson('/api/entities/agents', analystCookie);
+await expectJson('/api/entities/auth-intake', analystCookie);
 await expectJson('/api/documents', analystCookie);
 await expectJson('/api/source-tables', adminCookie);
+const priorAuth = await expectJson('/api/prior-auth/cases', adminCookie);
+if (!priorAuth.cases || priorAuth.cases.length < 15) {
+  throw new Error(`Expected at least 15 prior authorization cases, received ${priorAuth.cases?.length || 0}`);
+}
+const subfeatureCounts = Object.values(priorAuth.subfeatureRows || {}).map((rows) => rows.length);
+if (!subfeatureCounts.length || Math.min(...subfeatureCounts) < 15) {
+  throw new Error('Expected every prior authorization sub-feature to have at least 15 seeded rows');
+}
+const readiness = await expectJson('/api/prior-auth/production-readiness', adminCookie);
+for (const key of ['integrations', 'notificationOutbox', 'packetArtifacts', 'accessLogs', 'authControls', 'deploymentChecklist']) {
+  if (!readiness[key]?.length) {
+    throw new Error(`Production readiness response is missing ${key}`);
+  }
+}
 await expectStatus('/api/documents/upload', analystCookie, 405);
 
-const records = await expectJson('/api/entities/agents', managerCookie);
+const records = await expectJson('/api/entities/auth-intake', managerCookie);
 const rowId = records.rows[0].id;
 
-const approveResponse = await fetch(`${baseUrl}/api/entities/agents/approve`, {
+const approveResponse = await fetch(`${baseUrl}/api/entities/auth-intake/approve`, {
   method: 'POST',
   headers: {
     cookie: managerCookie,
@@ -52,7 +66,7 @@ if (!approveResponse.ok) {
   throw new Error(`Manager approval failed with ${approveResponse.status}`);
 }
 
-const forbiddenApprove = await fetch(`${baseUrl}/api/entities/agents/approve`, {
+const forbiddenApprove = await fetch(`${baseUrl}/api/entities/auth-intake/approve`, {
   method: 'POST',
   headers: {
     cookie: analystCookie,
@@ -64,4 +78,4 @@ if (forbiddenApprove.status !== 403) {
   throw new Error(`Analyst approval returned ${forbiddenApprove.status}, expected 403`);
 }
 
-console.log('AI Agent Ops Suite smoke passed');
+console.log('Prior Authorization Operations Hub smoke passed');

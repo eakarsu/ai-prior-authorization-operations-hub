@@ -7,7 +7,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "smoke": "node scripts/smoke-test.mjs"
+    "smoke": "node scripts/smoke-test.mjs",
+    "ui:regression": "node scripts/ui-regression.mjs"
   },
   "dependencies": {
     "@types/node": "20.11.5",

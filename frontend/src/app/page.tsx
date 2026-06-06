@@ -13,5 +13,5 @@ export default function RootPage() {
     router.replace(user ? '/dashboard' : '/login');
   }, [ready, router, user]);
 
-  return <div className="auth-wrap"><div className="card">Opening AI Agent Ops suite...</div></div>;
+  return <div className="auth-wrap"><div className="card">Opening Prior Authorization Operations Hub...</div></div>;
 }
