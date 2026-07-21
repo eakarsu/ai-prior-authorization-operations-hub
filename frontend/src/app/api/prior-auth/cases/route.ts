@@ -11,7 +11,7 @@ function actorName(session: { email: string; firstName: string; lastName: string
 
 function requestMeta(request: NextRequest) {
   return {
-    ipAddress: request.ip || request.headers.get('x-forwarded-for') || 'local',
+    ipAddress: request.headers.get('x-forwarded-for') || 'local',
     userAgent: request.headers.get('user-agent') || 'unknown',
   };
 }

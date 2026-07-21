@@ -4,7 +4,7 @@ import { requireSession } from '@/lib/requestAuth';
 
 function requestMeta(request: NextRequest) {
   return {
-    ipAddress: request.ip || request.headers.get('x-forwarded-for') || 'local',
+    ipAddress: request.headers.get('x-forwarded-for') || 'local',
     userAgent: request.headers.get('user-agent') || 'unknown',
   };
 }

@@ -3,8 +3,9 @@ import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
 import UnifiedShell from '@/components/unified/UnifiedShell';
 import { priorAuthFeatureMap } from '@/lib/priorAuthNavigation';
 
-export default function PriorAuthFeatureDashboardPage({ params }: { params: { feature: string } }) {
-  const feature = priorAuthFeatureMap[params.feature];
+export default async function PriorAuthFeatureDashboardPage({ params }: { params: Promise<{ feature: string }> }) {
+  const { feature: featureSlug } = await params;
+  const feature = priorAuthFeatureMap[featureSlug];
   if (!feature) {
     notFound();
   }

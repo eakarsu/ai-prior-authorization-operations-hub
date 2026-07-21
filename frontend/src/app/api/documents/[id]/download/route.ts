@@ -7,11 +7,12 @@ import { DATA_DIR } from '@/lib/storePaths';
 
 const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = requireSession(request);
   if (session instanceof NextResponse) return session;
   const docs = await getDocuments();
-  const doc = docs.find((item) => item.id === params.id);
+  const doc = docs.find((item) => item.id === id);
   if (!doc?.storagePath) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

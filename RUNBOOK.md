@@ -1,0 +1,25 @@
+# Governed prior-authorization runbook
+
+The primary user is a utilization-management analyst. Acceptance means a tenant-scoped case with member, payer, procedure, diagnosis, requester, urgency, due date, and explicit evidence criteria moves through evidence review and independent clinical review to an idempotent payer submission, signed payer response, appeal when needed, and closure. The production UI and `/api/governed/*` routes implement this journey; generated, sample, generic-AI, legacy case, and source-table surfaces are blocked in production.
+
+## Deployment and identity
+
+Install from `frontend/package-lock.json` and run `./start.sh check`. Configure `DATABASE_URL`, a 32+ character `AUTH_SECRET`, explicit `AUTH_ISSUER` and `AUTH_AUDIENCE`, and a versioned 32-byte hex key in `PRIOR_AUTH_DATA_KEYS_JSON`. Configure fixed HTTPS `PAYER_API_BASE_URL`, a short-lived payer access token, independent 32+ character payer webhook and worker secrets, and the provider timeout. Keep every secret in the deployment secret manager; never place values in source control or workflow payloads.
+
+Provision `prior_auth_identities` out of band using bcrypt hashes and least-privilege tenant roles (`analyst`, `clinician`, `manager`, `admin`). The built-in login issues a 30-minute, HTTP-only, SameSite=Strict, production-secure session bound to issuer, audience, expiry, JWT ID equivalent, tenant, identity, and role. Production SSO and IdP-enforced MFA remain launch gates; do not use a bypass code or plaintext JSON user list.
+
+Back up PostgreSQL, obtain change approval, and apply `ALLOW_SCHEMA_MIGRATION=1 ./start.sh migrate` twice in pre-production. Startup never installs packages, creates or seeds a database, runs a migration, resets cases, or kills a process. Check `/api/governed/health` before sending traffic. Restore testing must include encrypted case/evidence payloads, key-version metadata, identities, policy versions, immutable workflow/access events, provider event IDs, and outbox receipts.
+
+## Workflow and payer operations
+
+Member references and source URIs are stored only inside AES-256-GCM envelopes with tenant/case/evidence authenticated context; queue views expose a one-way member token. Evidence requires a supported source, HTTPS or URN provenance, version, effective time, evidence code, and SHA-256 content digest. Clinical readiness uses the latest effective, versioned payer policy and the persisted evidence set. It never auto-releases. A clinician other than the case owner must attest to complete evidence before readiness; optimistic versions reject stale actions.
+
+Submission and appeal actions create typed payer outbox jobs with stable idempotency keys. A scheduler calls the worker-authenticated dispatch route. Jobs use fixed provider endpoints, bounded timeouts, a 60-second lease, recovery of expired leases, exponential retry for transient failures, and dead-lettering for permanent or exhausted failures. A successful request receipt does not change the case state. Only a valid signed, replay-protected, time-ordered payer event can mark a case submitted, appealed, approved, denied, or errored. Reconcile payer receipts before replaying or manually compensating for a dead letter.
+
+Monitor authentication failures, access denials, due/SLA age by urgency, evidence gaps, clinical-review age, optimistic conflicts, outbox queue age, expired leases, retry counts, dead letters, payer latency/status, webhook signature failures, replay conflicts, stale events, receipt mismatches, and immutable-event write failures. Page operations when urgent cases breach internal thresholds; pause dispatch if identity, encryption, audit, policy lookup, or event verification is unavailable.
+
+## Incident, privacy, and change procedures
+
+For suspected PHI or credential exposure: disable affected identities and provider credentials, preserve database/provider/proxy evidence, rotate session/encryption/provider secrets under an approved plan, determine tenants/cases/fields/time range, notify security/privacy/legal leadership, assess contractual and regulatory notification duties, and document containment through closure. Do not delete immutable events. Key rotation requires a reviewed re-encryption job and verification that no envelope references the retired version before key removal.
+
+Exercise wrong-tenant access, invalid identity, evidence tampering, missing policy, incomplete criteria, author/reviewer separation, stale versions, payer timeout/429/4xx, lease recovery, dead-letter reconciliation, invalid/replayed/stale callbacks, denial/appeal, backup restoration, and incident response at least quarterly. Payer/FHIR/document contracts, real-system conformance, clinical and benefit-policy interpretation, HIPAA/security assessment, representative analyst/clinician/manager validation, production SSO/MFA, provider certification, observability integrations, disaster recovery, and organizational incident approval remain external launch gates. This repository does not establish clinical or payer correctness.

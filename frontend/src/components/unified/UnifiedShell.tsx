@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { featureNav, primaryNav } from '@/lib/unifiedApp';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 type UnifiedShellProps = {
   children: React.ReactNode;
@@ -13,6 +14,8 @@ type UnifiedShellProps = {
 
 export default function UnifiedShell({ children, title, subtitle, eyebrow }: UnifiedShellProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const production = process.env.NODE_ENV === 'production';
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
@@ -26,7 +29,7 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
           </div>
         </div>
         <nav className="nav-section">
-          {primaryNav.map((item) => {
+          {(production ? [] : primaryNav).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
             return (
@@ -37,6 +40,8 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
             );
           })}
         </nav>
+        {production ? <nav className="nav-section"><Link className="nav-link active" href="/prior-auth"><span>Governed Cases</span></Link></nav> : null}
+        {!production ? <>
         <div className="nav-heading">Features</div>
         <nav className="nav-section scroll">
           {featureNav.map((item) => {
@@ -50,6 +55,7 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
             );
           })}
         </nav>
+        </> : null}
       </aside>
       <main className="content-shell">
         <header className="topbar">
@@ -58,7 +64,7 @@ export default function UnifiedShell({ children, title, subtitle, eyebrow }: Uni
             <h2>{title}</h2>
             {subtitle ? <p>{subtitle}</p> : null}
           </div>
-          <div className="session-pill">admin@prior-auth.local<span>Prior Auth Session Active</span></div>
+          <div className="session-pill">{user?.email || 'Session'}<span>{user?.role || 'Prior Auth Session Active'}</span></div>
         </header>
         {children}
       </main>

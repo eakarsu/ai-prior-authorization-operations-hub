@@ -1,14 +1,7 @@
-import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
+import GovernedPriorAuthWorkspace from '@/components/unified/GovernedPriorAuthWorkspace';
 import UnifiedShell from '@/components/unified/UnifiedShell';
 
+export const dynamic = 'force-dynamic';
 export default function PriorAuthCommandCenterPage() {
-  return (
-    <UnifiedShell
-      eyebrow="Command Center"
-      title="Prior Authorization Case Command Center"
-      subtitle="Canonical authorization cases, lifecycle timeline, payer rule fit, evidence gaps, packet readiness, submissions, appeals, SLA automation, analytics, and compliance controls."
-    >
-      <PriorAuthWorkspace focus="case-command-center" />
-    </UnifiedShell>
-  );
+  return <UnifiedShell eyebrow="Governed Workflow" title="Prior Authorization Case Operations" subtitle="Persistent evidence, independent clinical review, durable payer submission, signed responses, appeals, and audit history."><GovernedPriorAuthWorkspace /></UnifiedShell>;
 }

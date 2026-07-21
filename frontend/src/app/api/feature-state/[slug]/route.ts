@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFeatureState, resetFeatureState, saveFeatureState } from '@/lib/featureStateStore';
 import { requireDocumentManager, requireSession } from '@/lib/requestAuth';
 
-export async function GET(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const session = requireSession(request);
   if (session instanceof NextResponse) return session;
-  const surface = await getFeatureState(params.slug);
+  const surface = await getFeatureState(slug);
   if (!surface) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
@@ -13,7 +14,8 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   return NextResponse.json(surface);
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const session = requireDocumentManager(request);
   if (session instanceof NextResponse) return session;
   const body = await request.json().catch(() => null);
@@ -21,14 +23,15 @@ export async function PUT(request: NextRequest, { params }: { params: { slug: st
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
-  await saveFeatureState(params.slug, body);
+  await saveFeatureState(slug, body);
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const session = requireDocumentManager(request);
   if (session instanceof NextResponse) return session;
-  const reset = await resetFeatureState(params.slug);
+  const reset = await resetFeatureState(slug);
   if (!reset) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

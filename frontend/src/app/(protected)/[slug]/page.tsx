@@ -18,8 +18,9 @@ const priorAuthDashboardFeatures: Record<string, string> = {
   'patient-updates': 'case-timeline',
 };
 
-export default function SuitePage({ params }: { params: { slug: string } }) {
-  const priorAuthFeatureSlug = priorAuthDashboardFeatures[params.slug];
+export default async function SuitePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const priorAuthFeatureSlug = priorAuthDashboardFeatures[slug];
   if (priorAuthFeatureSlug) {
     const feature = priorAuthFeatureMap[priorAuthFeatureSlug];
     return (
@@ -29,10 +30,10 @@ export default function SuitePage({ params }: { params: { slug: string } }) {
     );
   }
 
-  const page = pageRegistry[params.slug];
+  const page = pageRegistry[slug];
   if (!page) {
     notFound();
   }
 
-  return <FeaturePage slug={params.slug} page={page} />;
+  return <FeaturePage slug={slug} page={page} />;
 }

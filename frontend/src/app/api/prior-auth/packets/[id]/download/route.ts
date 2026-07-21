@@ -4,19 +4,20 @@ import { requireSession } from '@/lib/requestAuth';
 
 function requestMeta(request: NextRequest) {
   return {
-    ipAddress: request.ip || request.headers.get('x-forwarded-for') || 'local',
+    ipAddress: request.headers.get('x-forwarded-for') || 'local',
     userAgent: request.headers.get('user-agent') || 'unknown',
   };
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = requireSession(request);
   if (session instanceof NextResponse) return session;
-  const result = await readPacketArtifact(params.id);
+  const result = await readPacketArtifact(id);
   if (!result) {
     return NextResponse.json({ error: 'Packet artifact not found' }, { status: 404 });
   }
-  await appendAccessLog(session, `packet:${params.id}`, 'download_packet_pdf', requestMeta(request));
+  await appendAccessLog(session, `packet:${id}`, 'download_packet_pdf', requestMeta(request));
   return new NextResponse(result.bytes, {
     headers: {
       'Content-Type': 'application/pdf',

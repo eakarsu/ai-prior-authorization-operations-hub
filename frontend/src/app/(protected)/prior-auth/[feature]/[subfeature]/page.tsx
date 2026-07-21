@@ -3,9 +3,10 @@ import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
 import UnifiedShell from '@/components/unified/UnifiedShell';
 import { priorAuthFeatureMap } from '@/lib/priorAuthNavigation';
 
-export default function PriorAuthSubFeatureTablePage({ params }: { params: { feature: string; subfeature: string } }) {
-  const feature = priorAuthFeatureMap[params.feature];
-  const subfeature = feature?.subfeatures.find((item) => item.slug === params.subfeature);
+export default async function PriorAuthSubFeatureTablePage({ params }: { params: Promise<{ feature: string; subfeature: string }> }) {
+  const resolved = await params;
+  const feature = priorAuthFeatureMap[resolved.feature];
+  const subfeature = feature?.subfeatures.find((item) => item.slug === resolved.subfeature);
   if (!feature || !subfeature) {
     notFound();
   }

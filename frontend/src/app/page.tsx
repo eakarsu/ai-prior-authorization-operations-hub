@@ -10,7 +10,7 @@ export default function RootPage() {
 
   useEffect(() => {
     if (!ready) return;
-    router.replace(user ? '/dashboard' : '/login');
+    router.replace(user ? '/prior-auth' : '/login');
   }, [ready, router, user]);
 
   return <div className="auth-wrap"><div className="card">Opening Prior Authorization Operations Hub...</div></div>;

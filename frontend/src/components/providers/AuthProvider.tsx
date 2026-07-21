@@ -6,7 +6,7 @@ import type { SessionUser } from '@/lib/auth';
 type AuthContextValue = {
   user: SessionUser | null;
   ready: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (tenantId: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -52,12 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       ready,
-      login: async (email: string, password: string) => {
+      login: async (tenantId: string, email: string, password: string) => {
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ tenantId, email, password }),
         });
 
         if (!response.ok) {

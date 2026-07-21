@@ -40,6 +40,11 @@ function getPool() {
   return pool;
 }
 
+export function getGovernedPostgres() {
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for governed operations');
+  return getPool();
+}
+
 function readJsonFallback<T>(file: string, fallback: T): T {
   try {
     if (!fs.existsSync(file)) return fallback;

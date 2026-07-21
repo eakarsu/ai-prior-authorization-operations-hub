@@ -3,69 +3,35 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { demoUser, demoUsers } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const { ready, user, login } = useAuth();
-  const [email, setEmail] = useState(demoUser.email);
-  const [password, setPassword] = useState(demoUser.password);
+  const [tenantId, setTenantId] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (ready && user) {
-      router.replace('/dashboard');
-    }
-  }, [ready, router, user]);
-
   const [submitting, setSubmitting] = useState(false);
+  useEffect(() => { if (ready && user) router.replace('/prior-auth'); }, [ready, router, user]);
 
   const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    const ok = await login(email, password);
+    event.preventDefault(); setSubmitting(true); setError('');
+    const ok = await login(tenantId, email, password);
     setSubmitting(false);
-    if (!ok) {
-      setError('Use configured credentials or the seeded Prior Auth demo credentials.');
-      return;
-    }
-    router.push('/dashboard');
+    if (!ok) { setError('Credentials were not accepted or identity service is unavailable.'); return; }
+    router.push('/prior-auth');
   };
 
-  return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <div className="pill">Prior Auth</div>
-        <h1 style={{ marginBottom: 8 }}>Prior Auth login</h1>
-        <div className="muted">
-          One login for case lifecycle, payer rules, evidence, packets, appeals, SLA, analytics, documents, audit, approvals, and AI operations.
-        </div>
-
-        <form onSubmit={onSubmit}>
-          <label>
-            Email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} />
-          </label>
-          <label>
-            Password
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          </label>
-          <button className="button primary" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        {error ? <div style={{ color: '#b91c1c', marginTop: 14 }}>{error}</div> : null}
-
-        <div className="hint">
-          Seeded suite users:
-          {demoUsers.map((user) => (
-            <div key={user.email} style={{ marginTop: 8 }}>
-              <strong>{user.role}</strong>: {user.email} / {user.password}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="auth-wrap"><div className="auth-card">
+    <div className="pill">Governed Prior Authorization</div>
+    <h1 style={{ marginBottom: 8 }}>Sign in</h1>
+    <p className="muted">Use a provisioned tenant identity. Case actions are role-bound, version checked, and audited.</p>
+    <form onSubmit={onSubmit}>
+      <label>Organization<input required autoComplete="organization" value={tenantId} onChange={(event) => setTenantId(event.target.value)} /></label>
+      <label>Email<input required type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+      <label>Password<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+      <button className="button primary" type="submit" disabled={submitting}>{submitting ? 'Signing in…' : 'Sign in'}</button>
+    </form>
+    {error ? <div style={{ color: '#b91c1c', marginTop: 14 }}>{error}</div> : null}
+  </div></div>;
 }

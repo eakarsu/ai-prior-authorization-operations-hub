@@ -8,20 +8,28 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke-test.mjs",
-    "ui:regression": "node scripts/ui-regression.mjs"
+    "ui:regression": "node scripts/ui-regression.mjs",
+    "test:governance": "node --test ../governance/*.test.cjs",
+    "test:e2e": "node scripts/governed-e2e.mjs",
+    "check": "npm run typecheck && npm run test:governance"
   },
   "dependencies": {
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
+    "bcrypt": "^6.0.0",
     "lucide-react": "^0.468.0",
-    "next": "14.0.4",
-    "pg": "^8.16.3",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "typescript": "5.3.3"
+    "next": "^16.2.10",
+    "pg": "^8.22.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.5"
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^26.1.1",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
