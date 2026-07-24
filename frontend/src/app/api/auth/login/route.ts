@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     await db.query('INSERT INTO prior_auth_access_events(tenant_id,actor_id,actor_role,action,outcome,correlation_id,details) VALUES($1,$2,$3,$4,$5,$6,$7)', [tenantId, user.id, user.role, 'login', 'allowed', correlationId, JSON.stringify({})]);
     attempts.delete(`${remote}|${tenantId}|${email}`);
     const response = NextResponse.json({ user });
-    response.cookies.set(AUTH_COOKIE, encodeSession(user), { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 30 * 60 });
+    response.cookies.set(AUTH_COOKIE, encodeSession(user), { httpOnly: true, sameSite: 'strict', secure: process.env.SESSION_COOKIE_SECURE === 'true', path: '/', maxAge: 30 * 60 });
     return response;
   } catch (error) {
     console.error('login failed', error instanceof Error ? error.message : 'unknown');

@@ -1,18 +1,18 @@
-#!/bin/sh
-set -eu
-cd "$(dirname "$0")"
-mode="${1:-check}"
-if [ "${NODE_ENV:-}" = test ]; then
-  export AUTH_SECRET="${AUTH_SECRET:-${JWT_SECRET:-}}"
-  export AUTH_ISSUER="${AUTH_ISSUER:-prior-auth-runtime}"
-  export AUTH_AUDIENCE="${AUTH_AUDIENCE:-prior-auth-runtime-client}"
-  export PRIOR_AUTH_ACTIVE_KEY_VERSION="${PRIOR_AUTH_ACTIVE_KEY_VERSION:-runtime-v1}"
-  if [ -z "${PRIOR_AUTH_DATA_KEYS_JSON:-}" ]; then
-    PRIOR_AUTH_DATA_KEYS_JSON="$(node -e 'const crypto=require("node:crypto");const material=process.env.MEMORY_ENCRYPTION_KEY_BASE64||process.env.AUTH_SECRET;process.stdout.write(JSON.stringify({"runtime-v1":crypto.createHash("sha256").update(material).digest("hex")}))')"
-    export PRIOR_AUTH_DATA_KEYS_JSON
-  fi
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$project_dir/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$project_dir/.env"
+  set +a
 fi
-required() { eval "value=\${$1:-}"; [ -n "$value" ] || { echo "$1 is required" >&2; exit 1; }; }
+
+mode="${1:-start}"
+export API_PORT="${API_PORT:-${BACKEND_PORT:-}}"
+export UI_PORT="${UI_PORT:-${FRONTEND_PORT:-}}"
+required() { [[ -n "${!1:-}" ]] || { echo "$1 is required" >&2; exit 1; }; }
 configuration() {
   required DATABASE_URL
   required AUTH_SECRET
@@ -20,24 +20,42 @@ configuration() {
   required AUTH_AUDIENCE
   required PRIOR_AUTH_DATA_KEYS_JSON
   required PRIOR_AUTH_ACTIVE_KEY_VERSION
-  [ "${#AUTH_SECRET}" -ge 32 ] || { echo 'AUTH_SECRET must be at least 32 characters' >&2; exit 1; }
+  required OPENROUTER_API_KEY
+  required OPENROUTER_MODEL
+  required OPENROUTER_BASE_URL
+  required API_PORT
+  required UI_PORT
+  [[ "$API_PORT" != "$UI_PORT" ]] || { echo 'API_PORT and UI_PORT must differ' >&2; exit 1; }
+  [[ ${#AUTH_SECRET} -ge 32 ]] || { echo 'AUTH_SECRET must be at least 32 characters' >&2; exit 1; }
   node -e 'const keys=JSON.parse(process.env.PRIOR_AUTH_DATA_KEYS_JSON);const key=keys[process.env.PRIOR_AUTH_ACTIVE_KEY_VERSION];if(!/^[0-9a-f]{64}$/i.test(key||""))throw new Error("active prior authorization data key must be 32-byte hex")'
-  if [ "${NODE_ENV:-}" = production ]; then
-    required PAYER_API_BASE_URL
-    required PAYER_API_ACCESS_TOKEN
-    required PAYER_WEBHOOK_SECRET
-    required PROVIDER_WORKER_SECRET
-    [ "${#PAYER_WEBHOOK_SECRET}" -ge 32 ] || { echo 'PAYER_WEBHOOK_SECRET must be at least 32 characters' >&2; exit 1; }
-    [ "${#PROVIDER_WORKER_SECRET}" -ge 32 ] || { echo 'PROVIDER_WORKER_SECRET must be at least 32 characters' >&2; exit 1; }
-  fi
 }
+migrate() {
+  [[ "${ALLOW_SCHEMA_MIGRATION:-}" == 1 || "${ALLOW_SCHEMA_MIGRATION:-}" == true ]] || { echo 'Set ALLOW_SCHEMA_MIGRATION=true after approval' >&2; exit 1; }
+  for migration in "$project_dir"/frontend/migrations/*.sql; do
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+  done
+}
+start_services() {
+  migrate
+  BOOTSTRAP_ACKNOWLEDGEMENT=create-initial-admin node "$project_dir/backend/scripts/create-admin.mjs"
+  cleanup() {
+    trap - INT TERM EXIT
+    [[ -z "${proxy_pid:-}" ]] || kill "$proxy_pid" 2>/dev/null || true
+    [[ -z "${app_pid:-}" ]] || kill "$app_pid" 2>/dev/null || true
+    [[ -z "${proxy_pid:-}" ]] || wait "$proxy_pid" 2>/dev/null || true
+    [[ -z "${app_pid:-}" ]] || wait "$app_pid" 2>/dev/null || true
+  }
+  trap cleanup INT TERM EXIT
+  npm --prefix "$project_dir/frontend" run start -- -H 127.0.0.1 -p "$API_PORT" &
+  app_pid=$!
+  API_PORT="$API_PORT" UI_PORT="$UI_PORT" node "$project_dir/frontend/scripts/runtime-proxy.mjs" &
+  proxy_pid=$!
+  wait "$app_pid" "$proxy_pid"
+}
+
 case "$mode" in
-  check) (cd frontend && npm run check && npm run build) ;;
-  migrate)
-    configuration
-    [ "${ALLOW_SCHEMA_MIGRATION:-}" = 1 ] || { echo 'Set ALLOW_SCHEMA_MIGRATION=1 after backup and change approval' >&2; exit 1; }
-    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f frontend/migrations/001_governed_prior_auth.sql
-    ;;
-  start) configuration; (cd frontend && npm run start -- -H 127.0.0.1 -p "${PORT:-5302}") ;;
-  *) echo 'usage: ./start.sh check|migrate|start' >&2; exit 2 ;;
+  check) npm --prefix "$project_dir/frontend" run check && NODE_ENV=production npm --prefix "$project_dir/frontend" run build ;;
+  migrate) configuration; migrate ;;
+  start) configuration; start_services ;;
+  *) echo 'usage: ./start.sh [check|migrate|start]' >&2; exit 2 ;;
 esac
