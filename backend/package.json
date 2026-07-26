@@ -5,6 +5,7 @@
   "scripts": {
     "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f ../frontend/migrations/001_governed_prior_auth.sql",
     "create-admin": "node scripts/create-admin.mjs",
+    "provision:demo-data": "node scripts/provision-demo-data.mjs",
     "typecheck": "cd ../frontend && npm run typecheck",
     "smoke": "cd ../frontend && npm run smoke",
     "dev": "cd ../frontend && npm run dev"

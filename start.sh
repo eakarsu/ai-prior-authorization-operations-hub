@@ -25,10 +25,6 @@ fi
 demo_credentials_email=""
 demo_credentials_password=""
 demo_credentials_tenant="${DEMO_TENANT:-${BOOTSTRAP_TENANT_SLUG:-${GOVERNANCE_TENANT_ID:-${TENANT_ID:-}}}}"
-demo_credentials_tenant="${DEMO_TENANT:-${BOOTSTRAP_TENANT_SLUG:-${GOVERNANCE_TENANT_ID:-${TENANT_ID:-}}}}"
-demo_credentials_tenant="${DEMO_TENANT:-${BOOTSTRAP_TENANT_SLUG:-${GOVERNANCE_TENANT_ID:-${TENANT_ID:-}}}}"
-demo_credentials_tenant="${DEMO_TENANT:-${BOOTSTRAP_TENANT_SLUG:-${GOVERNANCE_TENANT_ID:-${TENANT_ID:-}}}}"
-demo_credentials_tenant="${DEMO_TENANT:-${BOOTSTRAP_TENANT_SLUG:-${GOVERNANCE_TENANT_ID:-${TENANT_ID:-}}}}"
 if [ -n "${PROVISION_ADMIN_EMAIL:-}" ] && [ -n "${PROVISION_ADMIN_PASSWORD:-}" ]; then
   demo_credentials_email="$PROVISION_ADMIN_EMAIL"
   demo_credentials_password="$PROVISION_ADMIN_PASSWORD"
@@ -52,6 +48,7 @@ elif [ -n "${DEFAULT_EMAIL:-}" ] && [ -n "${DEFAULT_PASSWORD:-}" ]; then
   demo_credentials_password="$DEFAULT_PASSWORD"
 fi
 if [ "${NODE_ENV:-development}" != production ] && [ "${ENABLE_DEMO_CREDENTIAL_AUTOFILL:-true}" = true ] && [ -n "$demo_credentials_email" ] && [ -n "$demo_credentials_password" ]; then
+  export ENABLE_DEMO_CREDENTIAL_AUTOFILL=true
   export NEXT_PUBLIC_ENABLE_DEMO_CREDENTIAL_AUTOFILL=true
   export NEXT_PUBLIC_DEMO_EMAIL="$demo_credentials_email"
   export NEXT_PUBLIC_DEMO_PASSWORD="$demo_credentials_password"
@@ -69,6 +66,7 @@ if [ "${NODE_ENV:-development}" != production ] && [ "${ENABLE_DEMO_CREDENTIAL_A
     unset NEXT_PUBLIC_DEMO_TENANT VITE_DEMO_TENANT REACT_APP_DEMO_TENANT
   fi
 else
+  export ENABLE_DEMO_CREDENTIAL_AUTOFILL=false
   export NEXT_PUBLIC_ENABLE_DEMO_CREDENTIAL_AUTOFILL=false
   export VITE_ENABLE_DEMO_CREDENTIAL_AUTOFILL=false
   export REACT_APP_ENABLE_DEMO_CREDENTIAL_AUTOFILL=false
@@ -104,6 +102,16 @@ configuration() {
   required UI_PORT
   [[ "$API_PORT" != "$UI_PORT" ]] || { echo 'API_PORT and UI_PORT must differ' >&2; exit 1; }
   [[ ${#AUTH_SECRET} -ge 32 ]] || { echo 'AUTH_SECRET must be at least 32 characters' >&2; exit 1; }
+  PRIOR_AUTH_DATA_KEYS_JSON="$(node -e '
+    const value = process.env.PRIOR_AUTH_DATA_KEYS_JSON || "";
+    try { process.stdout.write(JSON.stringify(JSON.parse(value))); }
+    catch {
+      const match = value.match(/^\{([A-Za-z0-9._-]+):([0-9a-fA-F]{64})\}$/);
+      if (!match) throw new Error("PRIOR_AUTH_DATA_KEYS_JSON must be a JSON object");
+      process.stdout.write(JSON.stringify({ [match[1]]: match[2] }));
+    }
+  ')"
+  export PRIOR_AUTH_DATA_KEYS_JSON
   node -e 'const keys=JSON.parse(process.env.PRIOR_AUTH_DATA_KEYS_JSON);const key=keys[process.env.PRIOR_AUTH_ACTIVE_KEY_VERSION];if(!/^[0-9a-f]{64}$/i.test(key||""))throw new Error("active prior authorization data key must be 32-byte hex")'
 }
 migrate() {
@@ -115,6 +123,9 @@ migrate() {
 start_services() {
   migrate
   BOOTSTRAP_ACKNOWLEDGEMENT=create-initial-admin node "$project_dir/backend/scripts/create-admin.mjs"
+  if [[ "${NODE_ENV:-development}" != production && "${ALLOW_DEMO_SEED:-false}" == true ]]; then
+    node "$project_dir/backend/scripts/provision-demo-data.mjs"
+  fi
   cleanup() {
     trap - INT TERM EXIT
     [[ -z "${proxy_pid:-}" ]] || kill "$proxy_pid" 2>/dev/null || true

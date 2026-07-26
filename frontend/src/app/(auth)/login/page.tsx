@@ -14,6 +14,22 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   useEffect(() => { if (ready && user) router.replace('/prior-auth'); }, [ready, router, user]);
 
+  const fillDemoCredentials = async () => {
+    setError('');
+    try {
+      const response = await fetch('/api/auth/demo-credentials', { cache: 'no-store' });
+      const credentials = await response.json();
+      if (!response.ok || !credentials.tenantId || !credentials.email || !credentials.password) {
+        throw new Error(credentials.error || 'Demo credentials are unavailable');
+      }
+      setTenantId(credentials.tenantId);
+      setEmail(credentials.email);
+      setPassword(credentials.password);
+    } catch (fillError) {
+      setError(fillError instanceof Error ? fillError.message : 'Demo credentials are unavailable');
+    }
+  };
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault(); setSubmitting(true); setError('');
     const ok = await login(tenantId, email, password);
@@ -32,8 +48,7 @@ export default function LoginPage() {
       <label>Password<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
       <button
         type="button"
-        onClick={() => { setEmail(process.env.NEXT_PUBLIC_DEMO_EMAIL || ''); setPassword(process.env.NEXT_PUBLIC_DEMO_PASSWORD || ''); }}
-        disabled={!process.env.NEXT_PUBLIC_DEMO_EMAIL || !process.env.NEXT_PUBLIC_DEMO_PASSWORD}
+        onClick={fillDemoCredentials}
         aria-label="Auto Fill Demo Credentials"
         style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
       >
