@@ -47,6 +47,19 @@ const array = (value, name, max = 100) => {
   if (!Array.isArray(value) || value.length > max) throw new Error(`${name} must be an array with at most ${max} items`);
   return value;
 };
+const optionalText = (value, name, max = 256) => value === undefined || value === null || value === '' ? null : clean(value, name, max);
+const optionalPositiveInteger = (value, name) => {
+  if (value === undefined || value === null || value === '') return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number <= 0) throw new Error(`${name} must be a positive integer`);
+  return number;
+};
+const optionalMoney = (value, name) => {
+  if (value === undefined || value === null || value === '') return 0;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0 || number > 9999999999) throw new Error(`${name} must be a non-negative amount`);
+  return Math.round(number * 100) / 100;
+};
 function noCredentials(value) { if (/password|secret|token|api.?key|authorization/i.test(canonical(value))) throw new Error('credentials forbidden'); }
 
 function intake(input) {
@@ -67,7 +80,16 @@ function intake(input) {
     required: criterion?.required !== false,
   }));
   if (!acceptanceCriteria.length || !acceptanceCriteria.some((criterion) => criterion.required)) throw new Error('at least one required acceptance criterion is required');
-  return { memberRef, payerRef, procedureCode, diagnosisCode, requestedBy, urgency: input.urgency, dueAt: dueAt.toISOString(), acceptanceCriteria };
+  const serviceLine = optionalText(input?.serviceLine, 'serviceLine', 40);
+  if (serviceLine && !['skilled_nursing', 'inpatient_rehab', 'home_health', 'long_term_acute_care', 'other'].includes(serviceLine)) throw new Error('serviceLine invalid');
+  return {
+    memberRef, payerRef, procedureCode, diagnosisCode, requestedBy, urgency: input.urgency,
+    dueAt: dueAt.toISOString(), acceptanceCriteria, serviceLine,
+    facilityRef: optionalText(input?.facilityRef, 'facilityRef', 160),
+    requestedUnits: optionalPositiveInteger(input?.requestedUnits, 'requestedUnits'),
+    estimatedRevenueAtRisk: optionalMoney(input?.estimatedRevenueAtRisk, 'estimatedRevenueAtRisk'),
+    careDelayHours: optionalPositiveInteger(input?.careDelayHours, 'careDelayHours') || 0,
+  };
 }
 
 function transition(from, to, actor, ownerId) {

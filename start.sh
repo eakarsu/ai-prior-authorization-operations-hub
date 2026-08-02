@@ -120,7 +120,34 @@ migrate() {
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
   done
 }
+release_port() {
+  local port="$1"
+  local listener_pids=""
+  local remaining_pids=""
+
+  command -v lsof >/dev/null 2>&1 || { echo 'lsof is required to release configured application ports' >&2; exit 1; }
+  listener_pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  [[ -n "$listener_pids" ]] || return 0
+
+  echo "Stopping existing listener on port $port..."
+  while IFS= read -r listener_pid; do
+    [[ "$listener_pid" =~ ^[0-9]+$ ]] && kill -TERM "$listener_pid" 2>/dev/null || true
+  done <<< "$listener_pids"
+
+  for _ in {1..20}; do
+    remaining_pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+    [[ -z "$remaining_pids" ]] && return 0
+    sleep 0.1
+  done
+
+  echo "Listener on port $port did not stop cleanly; forcing shutdown..."
+  while IFS= read -r listener_pid; do
+    [[ "$listener_pid" =~ ^[0-9]+$ ]] && kill -KILL "$listener_pid" 2>/dev/null || true
+  done <<< "$remaining_pids"
+}
 start_services() {
+  release_port "$UI_PORT"
+  release_port "$API_PORT"
   migrate
   BOOTSTRAP_ACKNOWLEDGEMENT=create-initial-admin node "$project_dir/backend/scripts/create-admin.mjs"
   if [[ "${NODE_ENV:-development}" != production && "${ALLOW_DEMO_SEED:-false}" == true ]]; then
@@ -134,7 +161,7 @@ start_services() {
     [[ -z "${app_pid:-}" ]] || wait "$app_pid" 2>/dev/null || true
   }
   trap cleanup INT TERM EXIT
-  npm --prefix "$project_dir/frontend" run start -- -H 127.0.0.1 -p "$API_PORT" &
+  NODE_ENV=production npm --prefix "$project_dir/frontend" run start -- -H 127.0.0.1 -p "$API_PORT" &
   app_pid=$!
   API_PORT="$API_PORT" UI_PORT="$UI_PORT" node "$project_dir/frontend/scripts/runtime-proxy.mjs" &
   proxy_pid=$!

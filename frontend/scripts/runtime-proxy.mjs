@@ -2,6 +2,7 @@ import http from 'node:http';
 
 const targetPort = Number(process.env.API_PORT);
 const listenPort = Number(process.env.UI_PORT);
+const listenHost = process.env.UI_HOST || '0.0.0.0';
 if (!Number.isInteger(targetPort) || !Number.isInteger(listenPort) || targetPort === listenPort) {
   throw new Error('distinct numeric API_PORT and UI_PORT are required');
 }
@@ -20,4 +21,4 @@ const server = http.createServer((request, response) => {
   });
   request.pipe(upstream);
 });
-server.listen(listenPort, '127.0.0.1', () => console.log(`UI proxy listening on http://127.0.0.1:${listenPort}`));
+server.listen(listenPort, listenHost, () => console.log(`UI proxy listening on ${listenHost}:${listenPort}`));

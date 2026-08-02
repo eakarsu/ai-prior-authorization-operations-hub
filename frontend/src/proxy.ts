@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_COOKIE } from '@/lib/auth';
 
-const productionApi = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/governed/', '/api/ai-tools/run'];
+const productionApi = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/auth/demo-credentials', '/api/governed/', '/api/ai-tools/run'];
 
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

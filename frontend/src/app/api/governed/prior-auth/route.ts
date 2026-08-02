@@ -22,9 +22,13 @@ export async function GET(request: NextRequest) {
       await accessEvent(db, user, correlation, 'case_detail_read', 'allowed', caseId);
       return NextResponse.json({ case: presentCase(result.rows[0], true), evidence: evidence.rows, events: events.rows });
     }
-    const result = await db.query('SELECT * FROM governed_prior_auth_cases WHERE tenant_id=$1 ORDER BY due_at,status,updated_at DESC LIMIT 250', [user.tenantId]);
+    const postAcuteOnly = request.nextUrl.searchParams.get('scope') === 'post-acute';
+    const result = await db.query(
+      `SELECT * FROM governed_prior_auth_cases WHERE tenant_id=$1${postAcuteOnly ? ' AND service_line IS NOT NULL' : ''} ORDER BY due_at,status,updated_at DESC LIMIT 250`,
+      [user.tenantId],
+    );
     await accessEvent(db, user, correlation, 'case_queue_read', 'allowed', null, { count: result.rowCount });
-    return NextResponse.json({ cases: result.rows.map((row) => presentCase(row)) });
+    return NextResponse.json({ cases: result.rows.map((row) => presentCase(row)), scope: postAcuteOnly ? 'post-acute' : 'all' });
   } catch (error) { const failure = errorResponse(error); return NextResponse.json({ error: failure.message }, { status: failure.status }); }
 }
 
@@ -43,7 +47,17 @@ export async function POST(request: NextRequest) {
     const encrypted = governance.encrypt(input, key.key, key.version, `tenant:${user.tenantId}:prior-auth-case:${id}`);
     const memberToken = governance.digest({ tenantId: user.tenantId, memberRef: input.memberRef }).slice(0, 16);
     await client.query('BEGIN');
-    const inserted = await client.query('INSERT INTO governed_prior_auth_cases(id,tenant_id,member_ref_token,payer_ref,procedure_code,diagnosis_code,requested_by,owner_id,urgency,due_at,acceptance_criteria,payload_encrypted,encryption_key_version,idempotency_key,request_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) ON CONFLICT(tenant_id,idempotency_key) DO NOTHING RETURNING *', [id, user.tenantId, memberToken, input.payerRef, input.procedureCode, input.diagnosisCode, input.requestedBy, user.id, input.urgency, input.dueAt, JSON.stringify(input.acceptanceCriteria), JSON.stringify(encrypted), key.version, idempotencyKey, requestDigest]);
+    const inserted = await client.query(
+      `INSERT INTO governed_prior_auth_cases(
+        id,tenant_id,member_ref_token,payer_ref,procedure_code,diagnosis_code,requested_by,owner_id,
+        urgency,due_at,acceptance_criteria,payload_encrypted,encryption_key_version,idempotency_key,request_digest,
+        service_line,facility_ref,requested_units,estimated_revenue_at_risk,care_delay_hours
+      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+      ON CONFLICT(tenant_id,idempotency_key) DO NOTHING RETURNING *`,
+      [id, user.tenantId, memberToken, input.payerRef, input.procedureCode, input.diagnosisCode, input.requestedBy, user.id,
+        input.urgency, input.dueAt, JSON.stringify(input.acceptanceCriteria), JSON.stringify(encrypted), key.version, idempotencyKey, requestDigest,
+        input.serviceLine, input.facilityRef, input.requestedUnits, input.estimatedRevenueAtRisk, input.careDelayHours],
+    );
     if (!inserted.rowCount) {
       const existing = await client.query('SELECT * FROM governed_prior_auth_cases WHERE tenant_id=$1 AND idempotency_key=$2', [user.tenantId, idempotencyKey]);
       if (existing.rows[0]?.request_digest !== requestDigest) throw Object.assign(new Error('Idempotency conflict'), { conflict: true });

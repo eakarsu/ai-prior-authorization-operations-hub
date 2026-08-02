@@ -3,5 +3,5 @@ import UnifiedShell from '@/components/unified/UnifiedShell';
 
 export const dynamic = 'force-dynamic';
 export default function PriorAuthCommandCenterPage() {
-  return <UnifiedShell eyebrow="Governed Workflow" title="Prior Authorization Case Operations" subtitle="Persistent evidence, independent clinical review, durable payer submission, signed responses, appeals, and audit history."><GovernedPriorAuthWorkspace /></UnifiedShell>;
+  return <UnifiedShell eyebrow="Medicare Advantage Operations" title="Post-Acute Prior Authorization & Appeals Learning OS" subtitle="Turn governed authorization work, human decisions, payer outcomes, and recovery results into a private operating advantage."><GovernedPriorAuthWorkspace /></UnifiedShell>;
 }

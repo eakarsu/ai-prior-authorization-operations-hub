@@ -10,6 +10,7 @@
     "smoke": "node scripts/smoke-test.mjs",
     "ui:regression": "node scripts/ui-regression.mjs",
     "test:governance": "node --test ../governance/*.test.cjs",
+    "test:post-acute": "node scripts/post-acute-live-check.mjs",
     "test:e2e": "node scripts/governed-e2e.mjs",
     "check": "npm run typecheck && npm run test:governance"
   },

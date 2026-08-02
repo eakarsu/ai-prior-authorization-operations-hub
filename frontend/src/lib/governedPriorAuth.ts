@@ -53,7 +53,11 @@ export function presentCase(row: Record<string, any>, includePayload = false) {
     clinicalReviewerId: row.clinical_reviewer_id, status: row.status, version: row.version,
     urgency: row.urgency, dueAt: row.due_at, acceptanceCriteria: row.acceptance_criteria,
     policyVersion: row.policy_version, payerReceipt: row.payer_receipt, createdAt: row.created_at,
-    updatedAt: row.updated_at, ...(payload ? { payload } : {}),
+    serviceLine: row.service_line, facilityRef: row.facility_ref, requestedUnits: row.requested_units,
+    authorizedUnits: row.authorized_units, denialCategory: row.denial_category, appealOutcome: row.appeal_outcome,
+    decisionAt: row.decision_at, appealDueAt: row.appeal_due_at,
+    estimatedRevenueAtRisk: Number(row.estimated_revenue_at_risk || 0), recoveredRevenue: Number(row.recovered_revenue || 0),
+    careDelayHours: Number(row.care_delay_hours || 0), updatedAt: row.updated_at, ...(payload ? { payload } : {}),
   };
 }
 
