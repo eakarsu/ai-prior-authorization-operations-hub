@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import AIWorkbench from '@/components/unified/AIWorkbench';
 import DocumentsWorkspace from '@/components/unified/DocumentsWorkspace';
+import DecisionEnhancements from '@/components/unified/DecisionEnhancements';
 import EntityWorkspace from '@/components/unified/EntityWorkspace';
 import MetricCard from '@/components/unified/MetricCard';
 import PriorAuthWorkspace from '@/components/unified/PriorAuthWorkspace';
@@ -14,7 +15,7 @@ import { sourceCustomFeatureContexts, sourceCustomFeatureEntitiesBySlug, sourceC
 import { featureSurfaceBySlug, type FeatureSurface } from '@/lib/featureSurfaces';
 import { featureEntitiesBySlug } from '@/lib/featureEntities';
 
-const STATUS_OPTIONS = ['Draft', 'Open', 'Queued', 'Review', 'Ready', 'In progress', 'Needs attention', 'Exception', 'Completed'];
+const STATUS_OPTIONS = ['Draft', 'Open', 'Queued', 'Review', 'Ready', 'In progress', 'Needs attention', 'Urgent', 'Exception', 'Completed'];
 
 const emptyFeatureSurface: FeatureSurface = {
   workItems: [],
@@ -23,7 +24,7 @@ const emptyFeatureSurface: FeatureSurface = {
   activityLog: [],
 };
 
-const emptyWorkItem = { item: '', status: 'Open', owner: '', nextStep: '' };
+const emptyWorkItem = { item: '', status: 'Open', owner: '', nextStep: '', priority: 'Medium' as const, due: '', approval: 'Pending' as const, evidenceSource: '', evidenceVerified: false, escalated: false, impact: 5 };
 const priorAuthWorkflowSlugs = new Set([
   'auth-intake',
   'payer-rule-matching',
@@ -182,6 +183,13 @@ export default function FeaturePage({ slug, page }: FeaturePageProps) {
       owner: newItem.owner.trim() || 'Unassigned',
       nextStep: newItem.nextStep.trim() || 'Review and assign next action',
       status: newItem.status || 'Open',
+      priority: newItem.priority,
+      due: newItem.due,
+      approval: newItem.approval,
+      evidenceSource: newItem.evidenceSource,
+      evidenceVerified: newItem.evidenceVerified,
+      escalated: newItem.escalated,
+      impact: newItem.impact,
     };
     setSurface((current) => ({
       ...current,
@@ -310,6 +318,10 @@ export default function FeaturePage({ slug, page }: FeaturePageProps) {
         <>
           <div style={{ height: 16 }} />
 
+          <DecisionEnhancements pageTitle={page.title} surface={surface} setSurface={setSurface} onActivity={pushActivity} />
+
+          <div style={{ height: 16 }} />
+
           <div className="card">
             <h3>Active Work Items</h3>
             <div className="toolbar-row">
@@ -413,6 +425,20 @@ export default function FeaturePage({ slug, page }: FeaturePageProps) {
                         placeholder="Owner"
                       />
                     </label>
+                    <label className="record-form-field">
+                      <span>Priority</span>
+                      <select value={newItem.priority} onChange={(e) => setNewItem((current) => ({ ...current, priority: e.target.value as typeof current.priority }))}>
+                        {['Critical', 'High', 'Medium', 'Low'].map((value) => <option key={value}>{value}</option>)}
+                      </select>
+                    </label>
+                    <label className="record-form-field">
+                      <span>SLA Due Date</span>
+                      <input type="date" value={newItem.due} onChange={(e) => setNewItem((current) => ({ ...current, due: e.target.value }))} />
+                    </label>
+                    <label className="record-form-field span-2">
+                      <span>Evidence Source</span>
+                      <input value={newItem.evidenceSource} onChange={(e) => setNewItem((current) => ({ ...current, evidenceSource: e.target.value }))} placeholder="Source system or evidence reference" />
+                    </label>
                     <label className="record-form-field span-2">
                       <span>Next Step</span>
                       <input
@@ -424,7 +450,7 @@ export default function FeaturePage({ slug, page }: FeaturePageProps) {
                   </div>
                   <div className="record-modal-actions">
                     <button className="button secondary" type="button" onClick={() => setShowAddItemModal(false)}>Cancel</button>
-                    <button className="button primary" onClick={addWorkItem} type="button" disabled={!newItem.item.trim()}>Save item</button>
+                    <button className="button primary" onClick={addWorkItem} type="button" disabled={!newItem.item.trim() || !newItem.owner.trim() || !newItem.due || !newItem.evidenceSource.trim()}>Save item</button>
                   </div>
                 </div>
               </div>

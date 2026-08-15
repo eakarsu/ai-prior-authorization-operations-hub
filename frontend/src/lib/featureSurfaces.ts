@@ -1,6 +1,6 @@
 import { featureCatalog } from '@/lib/unifiedApp';
 
-export type FeatureSurfaceRow = { id: string; item: string; status: string; owner: string; nextStep: string };
+export type FeatureSurfaceRow = { id: string; item: string; status: string; owner: string; nextStep: string; priority: 'Critical' | 'High' | 'Medium' | 'Low'; due: string; approval: 'Not required' | 'Pending' | 'Approved' | 'Rejected'; evidenceSource: string; evidenceVerified: boolean; escalated: boolean; impact: number };
 export type FeatureSurface = {
   workItems: FeatureSurfaceRow[];
   quickActions: string[];
@@ -25,11 +25,11 @@ function buildSurface(slug: string, title: string, category: string): FeatureSur
   const owner = ownerFor(category);
   return {
     workItems: [
-      { id: `${slug}-surface-1`, item: `${title} intake queue`, status: 'Open', owner, nextStep: 'Validate source request and assign owner' },
-      { id: `${slug}-surface-2`, item: `${title} clinical evidence review`, status: 'Review', owner: 'Clinical Reviewer', nextStep: 'Confirm medical necessity and missing proof' },
-      { id: `${slug}-surface-3`, item: `${title} payer follow-up`, status: 'Needs attention', owner: 'Payer Liaison', nextStep: 'Check status, portal notes, and next payer action' },
-      { id: `${slug}-surface-4`, item: `${title} SLA escalation`, status: 'Urgent', owner: 'Operations Lead', nextStep: 'Escalate overdue or service-date-sensitive case' },
-      { id: `${slug}-surface-5`, item: `${title} audit closeout`, status: 'In progress', owner: 'Team Lead', nextStep: 'Capture decision, packet evidence, and patient update' },
+      { id: `${slug}-surface-1`, item: `${title} intake queue`, status: 'Open', owner, nextStep: 'Validate source request and assign owner', priority: 'Critical', due: '2026-08-15', approval: 'Pending', evidenceSource: title + ' source record', evidenceVerified: true, escalated: false, impact: 30 },
+      { id: `${slug}-surface-2`, item: `${title} clinical evidence review`, status: 'Review', owner: 'Clinical Reviewer', nextStep: 'Confirm medical necessity and missing proof', priority: 'High', due: '2026-08-16', approval: 'Pending', evidenceSource: title + ' source record', evidenceVerified: false, escalated: false, impact: 26 },
+      { id: `${slug}-surface-3`, item: `${title} payer follow-up`, status: 'Needs attention', owner: 'Payer Liaison', nextStep: 'Check status, portal notes, and next payer action', priority: 'High', due: '2026-08-17', approval: 'Pending', evidenceSource: title + ' source record', evidenceVerified: true, escalated: false, impact: 22 },
+      { id: `${slug}-surface-4`, item: `${title} SLA escalation`, status: 'Urgent', owner: 'Operations Lead', nextStep: 'Escalate overdue or service-date-sensitive case', priority: 'Critical', due: '2026-08-15', approval: 'Pending', evidenceSource: title + ' source record', evidenceVerified: false, escalated: true, impact: 18 },
+      { id: `${slug}-surface-5`, item: `${title} audit closeout`, status: 'In progress', owner: 'Team Lead', nextStep: 'Capture decision, packet evidence, and patient update', priority: 'Medium', due: '2026-08-18', approval: 'Approved', evidenceSource: title + ' source record', evidenceVerified: true, escalated: false, impact: 14 },
     ],
     quickActions: [`Create ${title} record`, `Export ${title} list`, `Review ${title} exceptions`, `Assign ${title} owner`],
     controlChecks: [
