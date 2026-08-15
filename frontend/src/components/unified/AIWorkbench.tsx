@@ -89,8 +89,105 @@ function formatInput(prompt: string, fields: SourceAIToolField[], values: Record
   return structured ? prompt + '\n\nStructured fields:\n' + structured : prompt;
 }
 
+function parseStructuredResponse(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const original = value.replace(/^\uFEFF/, '').trim();
+  const fenced = original.match(/^```(?:json|javascript|js)?[ \t]*(?:\r?\n)?([\s\S]*?)(?:\r?\n)?```$/i);
+  let candidate = (fenced?.[1] ?? original).trim();
+
+  for (let pass = 0; pass < 2; pass += 1) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (typeof parsed !== 'string') return parsed;
+      candidate = parsed.trim();
+    } catch {
+      break;
+    }
+  }
+
+  return candidate;
+}
+
+function sectionLabel(value: string) {
+  const labels: Record<string, string> = {
+    summary: 'Executive Summary',
+    analysis_summary: 'Executive Summary',
+    key_findings: 'Key Findings',
+    findings: 'Key Findings',
+    recommendations: 'Recommendations',
+    prioritized_actions: 'Prioritized Actions',
+    actions: 'Recommended Actions',
+    next_steps: 'Next Steps',
+    risks: 'Risks and Safeguards',
+    confidence: 'AI Confidence',
+    missing_information: 'Missing Information',
+    follow_up_questions: 'Follow-up Questions',
+  };
+  return labels[value] || value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function readableValue(value: unknown): string {
+  if (value == null) return 'Not provided';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'string') return value.replace(/\*\*/g, '').replace(/`/g, '').trim();
+  if (Array.isArray(value)) return value.map(readableValue).join('; ');
+  return Object.entries(value as Record<string, unknown>)
+    .map(([key, item]) => sectionLabel(key) + ': ' + readableValue(item))
+    .join(' · ');
+}
+
+function sectionsFromObject(value: unknown): ParsedSection[] {
+  if (Array.isArray(value)) {
+    return [{ title: 'AI Analysis', paragraphs: [], bullets: value.map(readableValue) }];
+  }
+  if (!value || typeof value !== 'object') return [];
+
+  const object = value as Record<string, unknown>;
+  const providerContent = (object.choices as Array<{ message?: { content?: unknown } }> | undefined)?.[0]?.message?.content;
+  const contentKeys = ['result', 'ai_result', 'content', 'analysis', 'structured', 'output', 'response', 'data'];
+  const contentKey = contentKeys.find((key) => object[key] !== undefined && object[key] !== null && object[key] !== '');
+  const metadata = new Set(['title', 'feature', 'model', 'model_used', 'provider', 'usage', 'tokens', 'cached', 'createdAt', 'created_at', 'providerReceipt']);
+  const nonMetadata = Object.keys(object).filter((key) => !metadata.has(key));
+
+  if ((contentKey || providerContent) && nonMetadata.length <= 3) {
+    const nested = parseStructuredResponse(contentKey ? object[contentKey] : providerContent);
+    if (nested && typeof nested === 'object') return sectionsFromObject(nested);
+    if (typeof nested === 'string') return parseAIResponse(nested);
+  }
+
+  const priority = ['summary', 'analysis_summary', 'overview', 'confidence', 'key_findings', 'findings', 'recommendations', 'prioritized_actions', 'actions', 'next_steps', 'risks', 'safeguards', 'missing_information', 'assumptions', 'follow_up_questions'];
+  return Object.entries(object)
+    .filter(([key, item]) => !metadata.has(key) && item !== null && item !== undefined && item !== '')
+    .sort(([a], [b]) => {
+      const ai = priority.indexOf(a);
+      const bi = priority.indexOf(b);
+      return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
+    })
+    .map(([key, item]) => {
+      if (key === 'confidence' || key === 'ai_confidence') {
+        const numeric = Number.parseFloat(String(item));
+        const percent = Number.isFinite(numeric) ? Math.round(Math.max(0, Math.min(100, numeric <= 1 ? numeric * 100 : numeric))) : null;
+        const rating = percent === null ? '' : percent >= 80 ? 'High' : percent >= 55 ? 'Moderate' : 'Needs review';
+        return { title: sectionLabel(key), paragraphs: [percent === null ? readableValue(item) : percent + '% · ' + rating], bullets: [] };
+      }
+      if (Array.isArray(item)) return { title: sectionLabel(key), paragraphs: [], bullets: item.map(readableValue) };
+      if (item && typeof item === 'object') {
+        return { title: sectionLabel(key), paragraphs: [], bullets: Object.entries(item as Record<string, unknown>).map(([childKey, child]) => sectionLabel(childKey) + ': ' + readableValue(child)) };
+      }
+      return { title: sectionLabel(key), paragraphs: [readableValue(item)], bullets: [] };
+    });
+}
+
 function parseAIResponse(response: string): ParsedSection[] {
-  const lines = response
+  const structured = parseStructuredResponse(response);
+  if (structured && typeof structured === 'object') {
+    const sections = sectionsFromObject(structured);
+    if (sections.length) return sections;
+  }
+
+  const narrative = typeof structured === 'string' ? structured : response;
+  const lines = narrative
     .replace(/\r/g, '')
     .split('\n')
     .map((line) => line.trim())
@@ -124,7 +221,7 @@ function parseAIResponse(response: string): ParsedSection[] {
   }
 
   pushCurrent();
-  return sections.length ? sections : [{ title: 'AI Analysis', paragraphs: [response], bullets: [] }];
+  return sections.length ? sections : [{ title: 'AI Analysis', paragraphs: [narrative], bullets: [] }];
 }
 
 function classifySection(title: string) {
