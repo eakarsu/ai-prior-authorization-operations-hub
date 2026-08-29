@@ -446,6 +446,16 @@ const productionPlatformFeatures = [
     bullets: ['Regression tests', 'Smoke checks', 'Release gates'],
     metrics: [{ label: 'Checks', value: '48', note: 'Tracked' }, { label: 'Open Risks', value: '7', note: 'Need owner' }, { label: 'Ready', value: '84%', note: 'Production readiness' }],
   },
+  {
+    slug: 'payer-api-certification-lab',
+    title: 'Payer API Certification Lab',
+    href: '/payer-api-certification-lab',
+    category: 'Integration',
+    icon: Plug,
+    summary: 'Certify payer FHIR prior-authorization contracts with schema versions, consent, idempotency, deadlines, failure receipts, replay protection, and outcome reconciliation.',
+    bullets: ['FHIR contract certification', 'Failure and replay testing', 'Approval and outcome reconciliation'],
+    metrics: [{ label: 'Payer Contracts', value: '15', note: 'In certification' }, { label: 'Passing', value: '11', note: 'All critical cases' }, { label: 'Blocked', value: '4', note: 'Need payer action' }],
+  },
 ] as const;
 
 const allFeatures = [...features, ...supplementalFeatures, ...productionPlatformFeatures, ...aiFeatures];
@@ -508,7 +518,7 @@ export const featureCatalog: FeatureDefinition[] = [
 ];
 
 export const featureFamilies = [
-  { name: 'Production Platform Controls', features: ['Enterprise Identity & Access', 'Connector Operations Center', 'Audit Export Center', 'Notification Delivery Ledger', 'Observability & Runbooks', 'Release Test Harness'] },
+  { name: 'Production Platform Controls', features: ['Enterprise Identity & Access', 'Connector Operations Center', 'Audit Export Center', 'Notification Delivery Ledger', 'Observability & Runbooks', 'Release Test Harness', 'Payer API Certification Lab'] },
   {
     "name": "Prior Authorization",
     "features": priorAuthFeatures.map((feature) => feature.title)
