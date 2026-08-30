@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const priorAuth = require('./priorAuthorization.cjs');
+const { buildPasSubmissionManifest } = require('./fhirInterop.cjs');
 
 const intake = { memberRef: 'm1', payerRef: 'payer1', procedureCode: '70553', diagnosisCode: 'G43.0', requestedBy: 'clinic1', urgency: 'standard', dueAt: '2026-07-25T00:00:00Z', acceptanceCriteria: [{ code: 'MRI_NOTE', description: 'Recent clinical note', required: true }] };
 const policy = { payerRef: 'payer1', procedureCode: '70553', version: '2026.07', sourceUri: 'https://payer.example/policy/70553', effectiveAt: '2026-07-01T00:00:00Z', rules: [{ code: 'MRI_NOTE', description: 'Recent clinical note required', required: true }] };
@@ -69,4 +70,13 @@ test('launcher is explicit and non-destructive', () => {
   const script = fs.readFileSync(path.join(__dirname, '../start.sh'), 'utf8');
   assert.match(script, /check\|migrate\|start/);
   assert.doesNotMatch(script, /kill -9|npm install|seed|createdb/);
+});
+
+test('Da Vinci PAS manifest validates FHIR resources without echoing PHI', () => {
+  const bundle={resourceType:'Bundle',type:'collection',entry:['Patient','Coverage','Claim'].map((resourceType,index)=>({resource:{resourceType,id:`ref-${index}`,name:[{text:'must not be echoed'}]}}))};
+  const result=buildPasSubmissionManifest({bundle,payerEndpoint:'https://payer.example/pas',policyVersion:'payer-policy-7'});
+  assert.equal(result.readyForHumanApproval,true);
+  assert.equal(result.automaticSubmission,false);
+  assert.match(result.bundleDigest,/^[a-f0-9]{64}$/);
+  assert.doesNotMatch(JSON.stringify(result),/must not be echoed/);
 });
