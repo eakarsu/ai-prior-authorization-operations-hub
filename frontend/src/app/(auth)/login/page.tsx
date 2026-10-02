@@ -16,6 +16,7 @@ export default function LoginPage() {
 
   const fillDemoCredentials = async () => {
     setError('');
+    setSubmitting(true);
     try {
       const response = await fetch('/api/auth/demo-credentials', { cache: 'no-store' });
       const credentials = await response.json();
@@ -25,8 +26,18 @@ export default function LoginPage() {
       setTenantId(credentials.tenantId);
       setEmail(credentials.email);
       setPassword(credentials.password);
+
+      // Sign in immediately with the fetched values (state has not flushed yet).
+      const ok = await login(credentials.tenantId, credentials.email, credentials.password);
+      if (!ok) {
+        setError('Credentials were not accepted or identity service is unavailable.');
+        return;
+      }
+      router.push('/prior-auth');
     } catch (fillError) {
       setError(fillError instanceof Error ? fillError.message : 'Demo credentials are unavailable');
+    } finally {
+      setSubmitting(false);
     }
   };
 
