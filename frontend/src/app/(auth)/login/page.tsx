@@ -26,7 +26,7 @@ export default function LoginPage() {
       setTenantId(credentials.tenantId);
       setEmail(credentials.email);
       setPassword(credentials.password)
-      window.setTimeout(() => { const __f = document.querySelector('form'); if (__f) __f.requestSubmit(); }, 60);;
+
 
       // Sign in immediately with the fetched values (state has not flushed yet).
       const ok = await login(credentials.tenantId, credentials.email, credentials.password);
